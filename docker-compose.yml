@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sietrix
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: sietrix_crm
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sietrix -d sietrix_crm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sietrix:${DB_PASSWORD}@db:5432/sietrix_crm
+      SESSION_SECRET: ${SESSION_SECRET}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      RESUME_STORAGE_PATH: /data/resumes
+      JD_STORAGE_PATH: /data/jds
+      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
+    volumes:
+      - uploads:/data
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
+  uploads:

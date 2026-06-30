@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  sales
+  hr
+}
+
+enum ReqStatus {
+  open
+  in_progress
+  on_hold
+  closed_won
+  closed_lost
+}
+
+enum Priority {
+  high
+  medium
+  low
+}
+
+enum CandidateSource {
+  bench
+  external
+  referral
+  other
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdRequirements  Requirement[]           @relation("ReqCreatedBy")
+  assignedRequirements Requirement[]           @relation("ReqAssignedHR")
+  reqCollaborations    ReqCollaborator[]
+  ownedCandidates      Candidate[]             @relation("CandidateOwner")
+  candidateCollabs     CandidateCollaborator[]
+  stageChanges         PipelineStageHistory[]
+  notes                Note[]
+  screenings           HRScreening[]
+  sessions             Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+// ─── Contract Mode (admin-managed lookup) ────────────────────────────────────
+
+model ContractMode {
+  id           String        @id @default(cuid())
+  label        String        @unique
+  isActive     Boolean       @default(true)
+  order        Int
+  createdAt    DateTime      @default(now())
+  requirements Requirement[]
+}
+
+// ─── Requirements ─────────────────────────────────────────────────────────────
+
+model Requirement {
+  id          String    @id @default(cuid())
+  reqId       String    @unique
+  status      ReqStatus @default(open)
+  priority    Priority  @default(medium)
+  dateAdded   DateTime  @default(now())
+  closingDate DateTime?
+
+  sdrId String
+  sdr   User   @relation("ReqCreatedBy", fields: [sdrId], references: [id])
+
+  assignedHRId  String?
+  assignedHR    User?    @relation("ReqAssignedHR", fields: [assignedHRId], references: [id])
+  claimedAt     DateTime?
+  collaborators ReqCollaborator[]
+
+  clientGroup     String
+  vendor          String?
+  contactName     String?
+  contactRole     String?
+  contactLinkedIn String?
+  contactEmail    String?
+  contactPhone    String?
+
+  jobRole        String
+  experience     String?
+  budget         String?
+  location       String?
+  contractModeId String?
+  contractMode   ContractMode? @relation(fields: [contractModeId], references: [id])
+  industry       String?
+
+  meetingStatus String?
+  jdReceived    Boolean @default(false)
+  jdLink        String?
+  jdFilePath    String?
+
+  wonLostReason String?
+
+  pipelineEntries PipelineEntry[]
+  notes           Note[]          @relation("RequirementNotes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([clientGroup])
+  @@index([assignedHRId])
+  @@index([sdrId])
+}
+
+model ReqCollaborator {
+  requirementId String
+  userId        String
+  addedAt       DateTime @default(now())
+
+  requirement Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([requirementId, userId])
+}
+
+// ─── Candidates ───────────────────────────────────────────────────────────────
+
+model Candidate {
+  id          String @id @default(cuid())
+  candidateId String @unique
+
+  name              String
+  email             String?
+  phone             String?
+  linkedIn          String?
+  currentLocation   String?
+  willingToRelocate Boolean @default(false)
+
+  skills     String[]
+  experience Float?
+  visaStatus String?
+
+  source  CandidateSource @default(external)
+  ownerId String
+  owner   User            @relation("CandidateOwner", fields: [ownerId], references: [id])
+
+  collaborators   CandidateCollaborator[]
+  resumes         Resume[]
+  pipelineEntries PipelineEntry[]
+  notes           Note[]          @relation("CandidateNotes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model CandidateCollaborator {
+  candidateId String
+  userId      String
+  addedAt     DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([candidateId, userId])
+}
+
+model Resume {
+  id          String   @id @default(cuid())
+  candidateId String
+  filePath    String
+  fileName    String
+  mimeType    String
+  uploadedAt  DateTime @default(now())
+  isActive    Boolean  @default(true)
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+// ─── Pipeline ─────────────────────────────────────────────────────────────────
+
+model PipelineStage {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  entries PipelineEntry[]
+  history PipelineStageHistory[]
+}
+
+model PipelineEntry {
+  id            String @id @default(cuid())
+  candidateId   String
+  requirementId String
+  stageId       String
+
+  submissionDate DateTime?
+  offerDate      DateTime?
+  placementDate  DateTime?
+
+  notes          Note[]                 @relation("PipelineNotes")
+  stageHistory   PipelineStageHistory[]
+  interviewDates InterviewDate[]
+  screenings     HRScreening[]
+
+  candidate   Candidate     @relation(fields: [candidateId], references: [id])
+  requirement Requirement   @relation(fields: [requirementId], references: [id])
+  stage       PipelineStage @relation(fields: [stageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requirementId])
+  @@index([candidateId])
+  @@index([stageId])
+}
+
+model PipelineStageHistory {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  stageId         String
+  changedById     String
+  changedAt       DateTime @default(now())
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+  stage         PipelineStage @relation(fields: [stageId], references: [id])
+  changedBy     User          @relation(fields: [changedById], references: [id])
+}
+
+model InterviewDate {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  scheduledAt     DateTime
+  label           String?
+  createdAt       DateTime @default(now())
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+}
+
+// ─── HR Screening (first-call questionnaire per pipeline entry) ───────────────
+
+model HRScreening {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  conductedById   String
+  conductedAt     DateTime @default(now())
+
+  // responses: { sectionName: [ { question, answer } ] }
+  responses Json
+
+  notes String?
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+  conductedBy   User          @relation(fields: [conductedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pipelineEntryId])
+}
+
+// ─── Notes (polymorphic comment thread) ──────────────────────────────────────
+
+model Note {
+  id       String @id @default(cuid())
+  body     String
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  requirementId String?
+  requirement   Requirement? @relation("RequirementNotes", fields: [requirementId], references: [id], onDelete: Cascade)
+
+  candidateId String?
+  candidate   Candidate? @relation("CandidateNotes", fields: [candidateId], references: [id], onDelete: Cascade)
+
+  pipelineEntryId String?
+  pipelineEntry   PipelineEntry? @relation("PipelineNotes", fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([requirementId])
+  @@index([candidateId])
+  @@index([pipelineEntryId])
+}
