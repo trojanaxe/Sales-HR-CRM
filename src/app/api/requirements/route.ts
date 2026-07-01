@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     if (status) where.status = status;
     if (priority) where.priority = priority;
-    if (clientGroup) where.clientGroup = { contains: clientGroup, mode: "insensitive" };
+    if (clientGroup) where.clientGroup = { contains: clientGroup };
     if (unclaimed === "true") where.assignedHRId = null;
     if (assignedHRId) where.assignedHRId = assignedHRId;
 

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -159,7 +159,7 @@ model Candidate {
   currentLocation   String?
   willingToRelocate Boolean @default(false)
 
-  skills     String[]
+  skills     Json     @default("[]")
   experience Float?
   visaStatus String?
 

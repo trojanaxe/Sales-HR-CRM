@@ -22,23 +22,15 @@ export async function GET(req: NextRequest) {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
+        { name: { contains: search } },
+        { email: { contains: search } },
       ];
     }
     if (source) where.source = source;
-    if (visaStatus) where.visaStatus = { contains: visaStatus, mode: "insensitive" };
-    if (location) where.currentLocation = { contains: location, mode: "insensitive" };
+    if (visaStatus) where.visaStatus = { contains: visaStatus };
+    if (location) where.currentLocation = { contains: location };
     if (minExp) where.experience = { ...(where.experience as object || {}), gte: parseFloat(minExp) };
     if (maxExp) where.experience = { ...(where.experience as object || {}), lte: parseFloat(maxExp) };
-
-    if (skills.length > 0) {
-      if (skillLogic === "AND") {
-        where.skills = { hasEvery: skills };
-      } else {
-        where.skills = { hasSome: skills };
-      }
-    }
 
     const candidates = await prisma.candidate.findMany({
       where,
@@ -50,7 +42,21 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return ok(candidates);
+    // Skill filtering in JS since MySQL JSON arrays can't use hasEvery/hasSome
+    let result = candidates;
+    if (skills.length > 0) {
+      result = candidates.filter((c) => {
+        const candidateSkills = (c.skills as string[]).map((s) => s.toLowerCase());
+        const filterSkills = skills.map((s) => s.toLowerCase());
+        if (skillLogic === "AND") {
+          return filterSkills.every((s) => candidateSkills.includes(s));
+        } else {
+          return filterSkills.some((s) => candidateSkills.includes(s));
+        }
+      });
+    }
+
+    return ok(result);
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Unauthorized") return unauthorized();
     return serverError(e);
