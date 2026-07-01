@@ -4,11 +4,12 @@ import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", roles: ["admin", "sales", "hr"] },
+  { href: "/dashboard",    label: "Dashboard",    roles: ["admin", "sales", "hr"] },
   { href: "/requirements", label: "Requirements", roles: ["admin", "sales", "hr"] },
-  { href: "/candidates", label: "Candidates", roles: ["admin", "hr"] },
-  { href: "/pipeline", label: "Pipeline", roles: ["admin", "hr"] },
-  { href: "/admin", label: "Admin", roles: ["admin"] },
+  { href: "/candidates",   label: "Candidates",   roles: ["admin", "hr"] },
+  { href: "/pipeline",     label: "Pipeline",     roles: ["admin", "hr"] },
+  { href: "/bulk-upload",  label: "Bulk Upload",  roles: ["admin", "hr"] },
+  { href: "/admin",        label: "Admin",        roles: ["admin"] },
 ];
 
 export default function Sidebar({
