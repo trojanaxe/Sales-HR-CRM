@@ -27,8 +27,8 @@ export default function NotesThread({
     entityType === "requirement"
       ? `/api/requirements/${entityId}/notes`
       : entityType === "candidate"
-        ? `/api/candidates/${entityId}/notes`
-        : `/api/pipeline/${entityId}/notes`;
+      ? `/api/candidates/${entityId}/notes`
+      : `/api/pipeline/${entityId}/notes`;
 
   async function addNote(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +55,16 @@ export default function NotesThread({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-4">
-      <h3 className="text-sm font-semibold text-gray-700">Notes</h3>
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-4"
+      style={{
+        background: "rgba(255,255,255,0.06)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(255,255,255,0.09)",
+      }}
+    >
+      <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Notes</h3>
 
       <form onSubmit={addNote} className="flex flex-col gap-2">
         <textarea
@@ -64,12 +72,13 @@ export default function NotesThread({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Add a note…"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="glass-input w-full px-3 py-2 text-sm resize-none"
         />
         <button
           type="submit"
           disabled={saving || !body.trim()}
-          className="self-end px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-xs font-medium rounded-lg transition-colors"
+          className="self-end px-4 py-1.5 text-white text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
+          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
         >
           {saving ? "Adding…" : "Add Note"}
         </button>
@@ -77,17 +86,15 @@ export default function NotesThread({
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {notes.length === 0 && (
-          <p className="text-sm text-gray-400">No notes yet.</p>
+          <p className="text-sm text-white/30">No notes yet.</p>
         )}
         {notes.map((note) => (
-          <div key={note.id} className="border-l-2 border-gray-200 pl-3">
+          <div key={note.id} className="border-l-2 border-indigo-500/40 pl-3">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-medium text-gray-700">{note.author.name}</span>
-              <span className="text-xs text-gray-400">
-                {new Date(note.createdAt).toLocaleString()}
-              </span>
+              <span className="text-xs font-semibold text-white/70">{note.author.name}</span>
+              <span className="text-xs text-white/30">{new Date(note.createdAt).toLocaleString()}</span>
             </div>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.body}</p>
+            <p className="text-sm text-white/60 whitespace-pre-wrap">{note.body}</p>
           </div>
         ))}
       </div>

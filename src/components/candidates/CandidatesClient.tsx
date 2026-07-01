@@ -18,12 +18,21 @@ interface Candidate {
   _count: { pipelineEntries: number };
 }
 
-const SKILL_COLORS = [
-  "bg-blue-100 text-blue-700",
-  "bg-green-100 text-green-700",
-  "bg-purple-100 text-purple-700",
-  "bg-orange-100 text-orange-700",
+const SKILL_BADGE = [
+  "bg-sky-500/20 text-sky-300 border border-sky-500/25",
+  "bg-violet-500/20 text-violet-300 border border-violet-500/25",
+  "bg-emerald-500/20 text-emerald-300 border border-emerald-500/25",
+  "bg-amber-500/20 text-amber-300 border border-amber-500/25",
 ];
+
+const glassStyle = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+
+const inputCls = "glass-input px-3 py-2 text-sm";
 
 export default function CandidatesClient() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -45,7 +54,6 @@ export default function CandidatesClient() {
     if (source) params.set("source", source);
     if (skillLogic) params.set("skillLogic", skillLogic);
     selectedSkills.forEach((s) => params.append("skill", s));
-
     const res = await fetch(`/api/candidates?${params}`);
     const data = await res.json();
     setCandidates(data);
@@ -56,9 +64,7 @@ export default function CandidatesClient() {
 
   function addSkill() {
     const s = skillInput.trim();
-    if (s && !selectedSkills.includes(s)) {
-      setSelectedSkills((prev) => [...prev, s]);
-    }
+    if (s && !selectedSkills.includes(s)) setSelectedSkills((prev) => [...prev, s]);
     setSkillInput("");
   }
 
@@ -67,19 +73,25 @@ export default function CandidatesClient() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 max-w-7xl">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Candidates</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Candidates</h1>
+          <p className="text-xs text-white/40 mt-0.5">{candidates.length} total</p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => window.open("/api/export?type=candidates", "_blank")}
-            className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50"
+            className="px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all duration-200 cursor-pointer"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
           >
             Export CSV
           </button>
           <Link
             href="/candidates/new"
-            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer"
+            style={{ background: "linear-gradient(135deg,#10b981,#059669)", boxShadow: "0 4px 12px rgba(16,185,129,0.3)" }}
           >
             + New
           </Link>
@@ -87,19 +99,15 @@ export default function CandidatesClient() {
       </div>
 
       {/* Search & filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+      <div className="rounded-2xl p-4 space-y-3" style={glassStyle}>
         <div className="flex flex-wrap gap-3">
           <input
             placeholder="Search name or email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-56"
+            className={`${inputCls} w-56`}
           />
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-          >
+          <select value={source} onChange={(e) => setSource(e.target.value)} className={`${inputCls} w-40`}>
             <option value="">All Sources</option>
             <option value="bench">Bench</option>
             <option value="external">External</option>
@@ -107,21 +115,21 @@ export default function CandidatesClient() {
           </select>
           <div className="flex items-center gap-2">
             <input
-              placeholder="Min Exp"
+              placeholder="Min"
               type="number"
               value={minExp}
               onChange={(e) => setMinExp(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm w-20"
+              className={`${inputCls} w-20`}
             />
-            <span className="text-gray-400 text-sm">–</span>
+            <span className="text-white/30 text-sm">–</span>
             <input
-              placeholder="Max Exp"
+              placeholder="Max"
               type="number"
               value={maxExp}
               onChange={(e) => setMaxExp(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm w-20"
+              className={`${inputCls} w-20`}
             />
-            <span className="text-xs text-gray-500">yrs</span>
+            <span className="text-xs text-white/40">yrs exp</span>
           </div>
         </div>
 
@@ -133,11 +141,12 @@ export default function CandidatesClient() {
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addSkill()}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-44"
+              className={`${inputCls} w-44`}
             />
             <button
               onClick={addSkill}
-              className="px-3 py-1.5 bg-gray-100 border border-gray-300 text-sm rounded-lg hover:bg-gray-200"
+              className="px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
               +
             </button>
@@ -146,7 +155,7 @@ export default function CandidatesClient() {
             <select
               value={skillLogic}
               onChange={(e) => setSkillLogic(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs"
+              className={`${inputCls} w-32 text-xs`}
             >
               <option value="AND">Match ALL</option>
               <option value="OR">Match ANY</option>
@@ -155,66 +164,73 @@ export default function CandidatesClient() {
           {selectedSkills.map((s, i) => (
             <span
               key={s}
-              className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${SKILL_COLORS[i % SKILL_COLORS.length]}`}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${SKILL_BADGE[i % SKILL_BADGE.length]}`}
             >
               {s}
-              <button onClick={() => removeSkill(s)} className="hover:text-red-500">×</button>
+              <button onClick={() => removeSkill(s)} className="hover:text-rose-400 transition-colors cursor-pointer">×</button>
             </span>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="rounded-2xl overflow-hidden" style={glassStyle}>
         {loading ? (
-          <div className="p-8 text-center text-sm text-gray-400">Loading…</div>
+          <div className="p-10 text-center text-sm text-white/30 flex items-center justify-center gap-3">
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Loading…
+          </div>
         ) : candidates.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">No candidates found.</div>
+          <div className="p-10 text-center text-sm text-white/30">No candidates found.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">ID</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Location</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Skills</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Exp</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Visa</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Source</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Owner</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Pipeline</th>
-                  <th className="px-4 py-3" />
+                  {["ID", "Name", "Location", "Skills", "Exp", "Visa", "Source", "Owner", "Pipeline", ""].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-widest whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {candidates.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{c.candidateId}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      <Link href={`/candidates/${c.id}`} className="hover:text-blue-600">
+              <tbody>
+                {candidates.map((c, i) => (
+                  <tr
+                    key={c.id}
+                    className="transition-colors duration-150"
+                    style={{ borderBottom: i < candidates.length - 1 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                  >
+                    <td className="px-4 py-3 font-mono text-xs text-white/40">{c.candidateId}</td>
+                    <td className="px-4 py-3">
+                      <Link href={`/candidates/${c.id}`} className="font-semibold text-white hover:text-indigo-300 transition-colors">
                         {c.name}
                       </Link>
-                      {c.email && <div className="text-xs text-gray-400">{c.email}</div>}
+                      {c.email && <div className="text-xs text-white/35">{c.email}</div>}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{c.currentLocation || "—"}</td>
+                    <td className="px-4 py-3 text-white/60">{c.currentLocation || "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {c.skills.slice(0, 3).map((s, i) => (
-                          <span key={s} className={`px-1.5 py-0.5 rounded text-xs ${SKILL_COLORS[i % SKILL_COLORS.length]}`}>{s}</span>
+                        {c.skills.slice(0, 3).map((s, idx) => (
+                          <span key={s} className={`px-2 py-0.5 rounded-full text-xs font-medium ${SKILL_BADGE[idx % SKILL_BADGE.length]}`}>{s}</span>
                         ))}
                         {c.skills.length > 3 && (
-                          <span className="text-xs text-gray-400">+{c.skills.length - 3}</span>
+                          <span className="text-xs text-white/35">+{c.skills.length - 3}</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{c.experience != null ? `${c.experience}y` : "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs">{c.visaStatus || "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 capitalize">{c.source}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.owner.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{c._count.pipelineEntries}</td>
+                    <td className="px-4 py-3 text-white/60">{c.experience != null ? `${c.experience}y` : "—"}</td>
+                    <td className="px-4 py-3 text-white/60 text-xs">{c.visaStatus || "—"}</td>
+                    <td className="px-4 py-3 text-white/60 capitalize">{c.source}</td>
+                    <td className="px-4 py-3 text-white/60">{c.owner.name}</td>
+                    <td className="px-4 py-3 text-white/60">{c._count.pipelineEntries}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/candidates/${c.id}`} className="text-xs text-blue-600 hover:underline">View</Link>
+                      <Link href={`/candidates/${c.id}`} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors">View</Link>
                     </td>
                   </tr>
                 ))}

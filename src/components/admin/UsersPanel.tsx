@@ -13,6 +13,21 @@ interface User {
 
 const ROLES = ["admin", "sales", "hr"];
 
+const ROLE_BADGE: Record<string, string> = {
+  admin: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+  sales: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  hr: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+};
+
+const glassStyle = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+
+const inputCls = "glass-input w-full px-3 py-2 text-sm";
+
 export default function UsersPanel() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,10 +45,11 @@ export default function UsersPanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-800">Team Members</h2>
+        <h2 className="text-sm font-semibold text-white/70">Team Members</h2>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-all duration-200"
+          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
         >
           + Add User
         </button>
@@ -55,23 +71,21 @@ export default function UsersPanel() {
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <div className="text-sm text-white/30 py-8 text-center">Loading…</div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="rounded-2xl overflow-hidden" style={glassStyle}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Role</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                <th className="px-4 py-3" />
+                {["Name", "Email", "Role", "Status", ""].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-widest">{h}</th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map((u) => (
+            <tbody>
+              {users.map((u, i) =>
                 editingId === u.id ? (
-                  <tr key={u.id}>
+                  <tr key={u.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <td colSpan={5} className="px-4 py-3">
                       <UserForm
                         existing={u}
@@ -89,34 +103,32 @@ export default function UsersPanel() {
                     </td>
                   </tr>
                 ) : (
-                  <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                  <tr
+                    key={u.id}
+                    style={{ borderBottom: i < users.length - 1 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                  >
+                    <td className="px-4 py-3 font-semibold text-white">{u.name}</td>
+                    <td className="px-4 py-3 text-white/50">{u.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        u.role === "admin" ? "bg-purple-100 text-purple-700" :
-                        u.role === "sales" ? "bg-blue-100 text-blue-700" :
-                        "bg-green-100 text-green-700"
-                      }`}>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${ROLE_BADGE[u.role] ?? "bg-white/10 text-white/60"}`}>
                         {u.role}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.isActive ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border border-rose-500/30"}`}>
                         {u.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => setEditingId(u.id)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
+                      <button onClick={() => setEditingId(u.id)} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer">
                         Edit
                       </button>
                     </td>
                   </tr>
                 )
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -147,38 +159,50 @@ function UserForm({
   }
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+    <div className="rounded-2xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1.5">Name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1.5">Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1.5">Role</label>
+          <select value={role} onChange={(e) => setRole(e.target.value)} className={inputCls}>
             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">{existing ? "New Password (leave blank to keep)" : "Password"}</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1.5">
+            {existing ? "New Password (blank = keep)" : "Password"}
+          </label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
         </div>
         {existing && (
           <div className="flex items-center gap-2 pt-1">
-            <input type="checkbox" id="isActive" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded" />
-            <label htmlFor="isActive" className="text-sm text-gray-700">Active</label>
+            <input type="checkbox" id="isActive" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded accent-indigo-500" />
+            <label htmlFor="isActive" className="text-sm text-white/70 cursor-pointer">Active</label>
           </div>
         )}
       </div>
       <div className="flex gap-2">
-        <button onClick={submit} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+        <button
+          onClick={submit}
+          className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-all duration-200"
+          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+        >
           {existing ? "Update" : "Create"}
         </button>
-        <button onClick={onCancel} className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50">Cancel</button>
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white cursor-pointer transition-all duration-200"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );

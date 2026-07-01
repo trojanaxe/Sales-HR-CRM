@@ -8,6 +8,13 @@ interface ContractMode {
   isActive: boolean;
 }
 
+const glassStyle = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+
 export default function ContractModesPanel() {
   const [modes, setModes] = useState<ContractMode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +54,10 @@ export default function ContractModesPanel() {
 
   return (
     <div className="space-y-4 max-w-md">
-      <h2 className="text-base font-semibold text-gray-800">Contract Modes</h2>
-      <p className="text-sm text-gray-500">Manage the employment contract types available in requirement forms.</p>
+      <div>
+        <h2 className="text-sm font-semibold text-white/70">Contract Modes</h2>
+        <p className="text-xs text-white/40 mt-0.5">Manage employment contract types for requirement forms.</p>
+      </div>
 
       <div className="flex gap-2">
         <input
@@ -56,37 +65,45 @@ export default function ContractModesPanel() {
           onChange={(e) => setNewName(e.target.value)}
           placeholder="e.g. 1099"
           onKeyDown={(e) => e.key === "Enter" && add()}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+          className="glass-input flex-1 px-3 py-2 text-sm"
         />
         <button
           onClick={add}
           disabled={adding || !newName.trim()}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+          className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer disabled:opacity-50 transition-all duration-200"
+          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
         >
           Add
         </button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <div className="text-sm text-white/30 py-6 text-center">Loading…</div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="rounded-2xl overflow-hidden" style={glassStyle}>
           {modes.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-gray-400 text-center">No contract modes.</p>
+            <p className="px-4 py-8 text-sm text-white/30 text-center">No contract modes configured.</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
-              {modes.map((m) => (
-                <li key={m.id} className="flex items-center justify-between px-4 py-3">
-                  <span className={`text-sm font-medium ${m.isActive ? "text-gray-900" : "text-gray-400 line-through"}`}>
+            <ul>
+              {modes.map((m, i) => (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between px-4 py-3 transition-colors duration-150"
+                  style={{ borderBottom: i < modes.length - 1 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                >
+                  <span className={`text-sm font-medium ${m.isActive ? "text-white" : "text-white/30 line-through"}`}>
                     {m.label}
                   </span>
                   <button
                     onClick={() => toggle(m.id, m.isActive)}
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    className="text-xs px-2.5 py-1 rounded-full font-semibold cursor-pointer transition-all duration-200"
+                    style={
                       m.isActive
-                        ? "bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-700"
-                        : "bg-red-100 text-red-700 hover:bg-green-100 hover:text-green-700"
-                    }`}
+                        ? { background: "rgba(52,211,153,0.15)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.3)" }
+                        : { background: "rgba(244,63,94,0.15)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.3)" }
+                    }
                   >
                     {m.isActive ? "Active" : "Inactive"}
                   </button>

@@ -34,12 +34,12 @@ interface RequirementData {
 }
 
 const inputCls =
-  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50";
+  "glass-input w-full px-3 py-2 text-sm";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -118,23 +118,30 @@ export default function RequirementForm({
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-white/50 hover:text-white/90 transition-colors cursor-pointer"
         >
           ← Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {existing?.id
-            ? `Edit ${existing.reqId}`
-            : "New Requirement"}
+        <h1 className="text-2xl font-bold text-white tracking-tight">
+          {existing?.id ? `Edit ${existing.reqId}` : "New Requirement"}
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-2xl p-6 space-y-6"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(255,255,255,0.09)",
+        }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Client Group with autocomplete */}
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Client Group <span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-1.5">
+              Client Group <span className="text-rose-400">*</span>
             </label>
             <input
               className={inputCls}
@@ -148,11 +155,11 @@ export default function RequirementForm({
               required
             />
             {showClientSuggestions && filteredGroups.length > 0 && (
-              <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-auto">
+              <ul className="absolute z-10 w-full rounded-xl shadow-2xl mt-1 max-h-40 overflow-auto" style={{ background: "rgba(15,15,40,0.95)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.12)" }}>
                 {filteredGroups.map((g) => (
                   <li
                     key={g}
-                    className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
+                    className="px-3 py-2 text-sm text-white/80 hover:bg-indigo-600/30 cursor-pointer transition-colors"
                     onMouseDown={() => {
                       set("clientGroup", g);
                       setShowClientSuggestions(false);
@@ -354,14 +361,16 @@ export default function RequirementForm({
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
             >
               {loading ? "Saving…" : existing?.id ? "Save Changes" : "Create Requirement"}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
+              className="px-6 py-2.5 text-sm font-medium text-white/60 hover:text-white rounded-xl transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
               Cancel
             </button>

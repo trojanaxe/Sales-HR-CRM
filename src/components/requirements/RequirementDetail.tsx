@@ -8,11 +8,11 @@ import RequirementForm from "./RequirementForm";
 import SubmitCandidatesModal from "@/components/pipeline/SubmitCandidatesModal";
 
 const STATUS_COLORS: Record<string, string> = {
-  open: "bg-blue-100 text-blue-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  on_hold: "bg-yellow-100 text-yellow-700",
-  closed_won: "bg-green-100 text-green-700",
-  closed_lost: "bg-red-100 text-red-700",
+  open: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  in_progress: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+  on_hold: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+  closed_won: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+  closed_lost: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -21,9 +21,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  low: "bg-green-100 text-green-700",
+  high: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+  medium: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+  low: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
 };
 
 export default function RequirementDetail({
@@ -67,7 +67,7 @@ export default function RequirementDetail({
     else toast.error("Failed to unclaim");
   }
 
-  if (loading) return <div className="p-8 text-gray-400 text-sm">Loading…</div>;
+  if (loading) return <div className="p-8 text-white/30 text-sm">Loading…</div>;
   if (!req) return null;
 
   const canEdit =
@@ -88,9 +88,9 @@ export default function RequirementDetail({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-gray-700 mb-2">← Back</button>
+          <button onClick={() => router.back()} className="text-sm text-white/50 hover:text-white/90 transition-colors mb-2 cursor-pointer">← Back</button>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{req.reqId}</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight">{req.reqId}</h1>
             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[req.status]}`}>
               {STATUS_LABELS[req.status]}
             </span>
@@ -98,7 +98,7 @@ export default function RequirementDetail({
               {req.priority}
             </span>
           </div>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-white/50 text-sm mt-1">
             {req.clientGroup} · {req.jobRole}
           </p>
         </div>
@@ -106,7 +106,8 @@ export default function RequirementDetail({
           {canEdit && (
             <button
               onClick={() => setEditing(true)}
-              className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50"
+              className="px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
               Edit
             </button>
@@ -114,7 +115,8 @@ export default function RequirementDetail({
           {userRole === "hr" && !req.assignedHR && (
             <button
               onClick={claim}
-              className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+              className="px-3 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer"
+              style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
             >
               Claim
             </button>
@@ -122,7 +124,8 @@ export default function RequirementDetail({
           {(userRole === "admin" || isMyReq) && req.assignedHR && (
             <button
               onClick={unclaim}
-              className="px-3 py-1.5 border border-orange-300 text-orange-600 text-sm rounded-lg hover:bg-orange-50"
+              className="px-3 py-2 rounded-xl text-sm font-medium text-amber-400 hover:text-amber-300 transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" }}
             >
               Unclaim
             </button>
@@ -130,7 +133,8 @@ export default function RequirementDetail({
           {(userRole === "hr" || userRole === "admin") && (
             <button
               onClick={() => setShowSubmitModal(true)}
-              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+              className="px-3 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer"
+              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
             >
               Submit Candidates
             </button>
@@ -141,9 +145,9 @@ export default function RequirementDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-5 grid grid-cols-2 gap-4">
+          <div className="rounded-2xl p-5 grid grid-cols-2 gap-4" style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.09)" }}>
             <InfoRow label="SDR" value={req.sdr.name} />
-            <InfoRow label="Assigned HR" value={req.assignedHR?.name || <span className="text-orange-500">Unclaimed</span>} />
+            <InfoRow label="Assigned HR" value={req.assignedHR?.name || <span className="text-amber-400">Unclaimed</span>} />
             <InfoRow label="Location" value={req.location} />
             <InfoRow label="Experience" value={req.experience} />
             <InfoRow label="Budget" value={req.budget} />
@@ -155,7 +159,7 @@ export default function RequirementDetail({
             {req.jdLink && (
               <div className="col-span-2">
                 <span className="text-xs text-gray-500">JD Link</span>
-                <a href={req.jdLink} target="_blank" rel="noreferrer" className="block text-sm text-blue-600 hover:underline truncate">{req.jdLink}</a>
+                <a href={req.jdLink} target="_blank" rel="noreferrer" className="block text-sm text-indigo-400 hover:text-indigo-300 truncate transition-colors">{req.jdLink}</a>
               </div>
             )}
             {req.wonLostReason && (
@@ -167,8 +171,8 @@ export default function RequirementDetail({
 
           {/* Contact */}
           {(req.contactName || req.contactEmail) && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Contact</h3>
+            <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.09)" }}>
+              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Contact</h3>
               <div className="grid grid-cols-2 gap-3">
                 <InfoRow label="Name" value={req.contactName} />
                 <InfoRow label="Role" value={req.contactRole} />
@@ -181,17 +185,17 @@ export default function RequirementDetail({
 
           {/* Pipeline entries */}
           {req.pipelineEntries.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.09)" }}>
+              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">
                 Pipeline ({req.pipelineEntries.length} candidates)
               </h3>
               <div className="space-y-2">
                 {req.pipelineEntries.map((pe: any) => (
                   <div key={pe.id} className="flex items-center justify-between text-sm">
-                    <Link href={`/candidates/${pe.candidate.id}`} className="text-blue-600 hover:underline">
+                    <Link href={`/candidates/${pe.candidate.id}`} className="text-indigo-400 hover:text-indigo-300 transition-colors">
                       {pe.candidate.name}
                     </Link>
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-white/10 text-white/60 px-2 py-0.5 rounded-full border border-white/10">
                       {pe.stage.name}
                     </span>
                   </div>
@@ -226,8 +230,8 @@ export default function RequirementDetail({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <span className="text-xs text-gray-500 block">{label}</span>
-      <span className="text-sm text-gray-900">{value || <span className="text-gray-400">—</span>}</span>
+      <span className="text-xs text-white/40 block font-medium uppercase tracking-widest mb-0.5">{label}</span>
+      <span className="text-sm text-white/80">{value || <span className="text-white/25">—</span>}</span>
     </div>
   );
 }

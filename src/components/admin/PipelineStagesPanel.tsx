@@ -9,6 +9,13 @@ interface PipelineStage {
   isActive: boolean;
 }
 
+const glassStyle = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+
 export default function PipelineStagesPanel() {
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,8 +75,10 @@ export default function PipelineStagesPanel() {
 
   return (
     <div className="space-y-4 max-w-md">
-      <h2 className="text-base font-semibold text-gray-800">Pipeline Stages</h2>
-      <p className="text-sm text-gray-500">Manage stages that candidates move through in the pipeline.</p>
+      <div>
+        <h2 className="text-sm font-semibold text-white/70">Pipeline Stages</h2>
+        <p className="text-xs text-white/40 mt-0.5">Manage and reorder stages that candidates move through.</p>
+      </div>
 
       <div className="flex gap-2">
         <input
@@ -77,78 +86,87 @@ export default function PipelineStagesPanel() {
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New stage name"
           onKeyDown={(e) => e.key === "Enter" && add()}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+          className="glass-input flex-1 px-3 py-2 text-sm"
         />
         <button
           onClick={add}
           disabled={adding || !newName.trim()}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+          className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer disabled:opacity-50 transition-all duration-200"
+          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
         >
           Add
         </button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <div className="text-sm text-white/30 py-6 text-center">Loading…</div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="rounded-2xl overflow-hidden" style={glassStyle}>
           {stages.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-gray-400 text-center">No stages configured.</p>
+            <p className="px-4 py-8 text-sm text-white/30 text-center">No stages configured.</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul>
               {stages
                 .slice()
                 .sort((a, b) => a.order - b.order)
-                .map((s) => (
-                  <li key={s.id} className="flex items-center gap-3 px-4 py-3">
+                .map((s, i) => (
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-3 px-4 py-3 transition-colors duration-150"
+                    style={{ borderBottom: i < stages.length - 1 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                  >
+                    {/* Reorder buttons */}
                     <div className="flex flex-col gap-0.5">
                       <button
                         onClick={() => moveUp(s)}
                         disabled={s.order === 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none"
+                        className="text-white/30 hover:text-white/70 disabled:opacity-20 text-xs leading-none cursor-pointer transition-colors"
                       >
                         ▲
                       </button>
                       <button
                         onClick={() => moveDown(s)}
                         disabled={s.order === stages.length}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none"
+                        className="text-white/30 hover:text-white/70 disabled:opacity-20 text-xs leading-none cursor-pointer transition-colors"
                       >
                         ▼
                       </button>
                     </div>
 
-                    <span className="text-xs text-gray-400 w-5">{s.order}</span>
+                    <span className="text-xs text-white/30 w-5 font-mono">{s.order}</span>
 
                     {editingId === s.id ? (
-                      <div className="flex-1 flex gap-2">
+                      <div className="flex-1 flex gap-2 items-center">
                         <input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="flex-1 border border-gray-300 rounded px-2 py-0.5 text-sm"
+                          className="glass-input flex-1 px-2 py-1 text-sm"
                           autoFocus
                         />
-                        <button onClick={() => update(s.id, { name: editName })} className="text-xs text-blue-600 hover:underline">Save</button>
-                        <button onClick={() => setEditingId(null)} className="text-xs text-gray-400 hover:underline">Cancel</button>
+                        <button onClick={() => update(s.id, { name: editName })} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer">Save</button>
+                        <button onClick={() => setEditingId(null)} className="text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer">Cancel</button>
                       </div>
                     ) : (
                       <>
-                        <span className={`flex-1 text-sm font-medium ${s.isActive ? "text-gray-900" : "text-gray-400 line-through"}`}>
+                        <span className={`flex-1 text-sm font-medium ${s.isActive ? "text-white" : "text-white/30 line-through"}`}>
                           {s.name}
                         </span>
                         <button
                           onClick={() => { setEditingId(s.id); setEditName(s.name); }}
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
                         >
                           Rename
                         </button>
                         <button
                           onClick={() => update(s.id, { isActive: !s.isActive })}
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          className="text-xs px-2.5 py-1 rounded-full font-semibold cursor-pointer transition-all duration-200"
+                          style={
                             s.isActive
-                              ? "bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-700"
-                              : "bg-red-100 text-red-700 hover:bg-green-100 hover:text-green-700"
-                          }`}
+                              ? { background: "rgba(52,211,153,0.15)", color: "#6ee7b7", border: "1px solid rgba(52,211,153,0.3)" }
+                              : { background: "rgba(244,63,94,0.15)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.3)" }
+                          }
                         >
                           {s.isActive ? "Active" : "Inactive"}
                         </button>

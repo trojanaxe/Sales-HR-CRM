@@ -18,7 +18,6 @@ function normalizeHeader(h: string): string {
 }
 
 const HEADER_ALIASES: Record<string, string> = {
-  // requirements
   clientgroup: "clientGroup",
   client: "clientGroup",
   company: "clientGroup",
@@ -33,7 +32,6 @@ const HEADER_ALIASES: Record<string, string> = {
   contactphone: "contactPhone",
   jdlink: "jdLink",
   jdurl: "jdLink",
-  // candidates
   fullname: "name",
   candidatename: "name",
   firstname: "name",
@@ -57,12 +55,10 @@ function resolveHeader(raw: string): string {
 
 async function parseFile(file: File): Promise<Row[]> {
   const ext = file.name.split(".").pop()?.toLowerCase();
-
   if (ext === "csv") {
     const text = await file.text();
     return parseCSV(text);
   }
-
   if (ext === "xlsx" || ext === "xls") {
     const { read, utils } = await import("xlsx");
     const buf = await file.arrayBuffer();
@@ -77,14 +73,12 @@ async function parseFile(file: File): Promise<Row[]> {
       return row;
     });
   }
-
   throw new Error("Unsupported file format. Use .csv, .xlsx, or .xls");
 }
 
 function parseCSV(text: string): Row[] {
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter((l) => l.trim());
   if (lines.length < 2) return [];
-
   function splitLine(line: string): string[] {
     const result: string[] = [];
     let current = "";
@@ -98,7 +92,6 @@ function parseCSV(text: string): Row[] {
     result.push(current.trim());
     return result;
   }
-
   const headers = splitLine(lines[0]).map(resolveHeader);
   return lines.slice(1).map((line) => {
     const vals = splitLine(line);
@@ -143,6 +136,15 @@ function downloadSample(type: UploadType) {
 
 // ── component ─────────────────────────────────────────────────────────────────
 
+const glassStyle = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+
+const inputCls = "glass-input px-3 py-2 text-sm";
+
 export default function BulkUploadClient({ userRole }: { userRole: string }) {
   const [type, setType] = useState<UploadType>("candidates");
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -155,15 +157,11 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
   const schema = SCHEMAS[type];
   const validRows = rows.filter((r) => r.errors.length === 0);
   const invalidRows = rows.filter((r) => r.errors.length > 0);
-
   const allValidSelected = validRows.every((r) => selectedRows.has(r.index));
 
   function toggleAll() {
-    if (allValidSelected) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(validRows.map((r) => r.index)));
-    }
+    if (allValidSelected) setSelectedRows(new Set());
+    else setSelectedRows(new Set(validRows.map((r) => r.index)));
   }
 
   function toggleRow(index: number) {
@@ -184,7 +182,6 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
       const validated = validateRows(parsed, schema);
       setFileName(file.name);
       setRows(validated);
-      // auto-select all valid rows
       setSelectedRows(new Set(validated.filter((r) => r.errors.length === 0).map((r) => r.index)));
       toast.success(`Parsed ${parsed.length} rows`);
     } catch (e: unknown) {
@@ -228,20 +225,20 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
     <div className="space-y-6 max-w-6xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Bulk Upload</h1>
-        <p className="text-sm text-gray-500 mt-1">Import multiple records from a CSV or Excel file.</p>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Bulk Upload</h1>
+        <p className="text-sm text-white/40 mt-1">Import multiple records from a CSV or Excel file.</p>
       </div>
 
       {/* Config card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+      <div className="rounded-2xl p-6 space-y-5" style={glassStyle}>
         <div className="flex flex-wrap gap-6 items-end">
           {/* Type selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Import type</label>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">Import Type</label>
             <select
               value={type}
               onChange={(e) => { setType(e.target.value as UploadType); reset(); }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${inputCls} w-44`}
             >
               {userRole !== "sales" && <option value="candidates">Candidates</option>}
               {(userRole === "admin" || userRole === "sales") && <option value="requirements">Requirements</option>}
@@ -250,19 +247,23 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
 
           {/* Sample download */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Sample file</label>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">Sample File</label>
             <button
               onClick={() => downloadSample(type)}
-              className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
-              <span>⬇</span> Download Sample
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Sample
             </button>
-            <p className="text-xs text-gray-400 mt-1">CSV with example rows</p>
+            <p className="text-xs text-white/30 mt-1.5">CSV with example rows</p>
           </div>
 
           {/* File picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload file</label>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">Upload File</label>
             <div className="flex gap-2 items-center">
               <input
                 ref={fileRef}
@@ -273,53 +274,69 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
               />
               <button
                 onClick={() => fileRef.current?.click()}
-                className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-white flex items-center gap-2 transition-all duration-200 cursor-pointer"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
               >
-                <span>📂</span> Choose File
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                Choose File
               </button>
-              {fileName && <span className="text-sm text-gray-600 truncate max-w-xs">{fileName}</span>}
+              {fileName && <span className="text-sm text-white/60 truncate max-w-xs">{fileName}</span>}
             </div>
-            <p className="text-xs text-gray-400 mt-1">Supports .csv, .xlsx, .xls</p>
+            <p className="text-xs text-white/30 mt-1.5">Supports .csv, .xlsx, .xls</p>
           </div>
 
           {rows.length > 0 && (
-            <button onClick={reset} className="px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button
+              onClick={reset}
+              className="px-3 py-2 rounded-xl text-sm text-white/50 hover:text-white/80 transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+            >
               Clear
             </button>
           )}
         </div>
 
-        {/* Template / column guide */}
+        {/* Column guide */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Expected columns for <span className="text-blue-600">{type}</span></p>
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-2.5">
+            Expected columns for <span className="text-indigo-400">{type}</span>
+          </p>
           <div className="flex flex-wrap gap-2">
             {schema.map((col) => (
               <span
                 key={col.key}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${col.required ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium ${col.required ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" : "bg-white/[0.06] text-white/50 border border-white/10"}`}
                 title={col.hint}
               >
                 {col.label}{col.required ? " *" : ""}
-                {col.hint && <span className="ml-1 opacity-60">ℹ</span>}
               </span>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">
-            <span className="text-blue-600 font-medium">Blue = required.</span> Column names are flexible — &quot;Full Name&quot;, &quot;Candidate Name&quot;, &quot;name&quot; all work.
+          <p className="text-xs text-white/30 mt-2">
+            <span className="text-indigo-400 font-medium">Indigo = required.</span> Column names are flexible — &quot;Full Name&quot;, &quot;name&quot;, &quot;Candidate Name&quot; all work.
           </p>
         </div>
       </div>
 
       {/* Upload result banner */}
       {result && (
-        <div className={`rounded-xl p-4 border ${result.failed === 0 ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}`}>
-          <p className="text-sm font-semibold text-gray-800">
-            ✅ {result.created} records created{result.failed > 0 ? ` · ⚠️ ${result.failed} failed` : ""}
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: result.failed === 0 ? "rgba(52,211,153,0.10)" : "rgba(245,158,11,0.10)",
+            border: result.failed === 0 ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(245,158,11,0.25)",
+          }}
+        >
+          <p className="text-sm font-semibold text-white">
+            {result.failed === 0 ? "✓" : "⚠"} {result.created} records created
+            {result.failed > 0 ? ` · ${result.failed} failed` : ""}
           </p>
           {result.errors.length > 0 && (
             <ul className="mt-2 space-y-0.5">
               {result.errors.map((e, i) => (
-                <li key={i} className="text-xs text-red-600">{e}</li>
+                <li key={i} className="text-xs text-rose-400">{e}</li>
               ))}
             </ul>
           )}
@@ -331,59 +348,81 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
         <div className="space-y-3">
           {/* Stats bar */}
           <div className="flex items-center justify-between">
-            <div className="flex gap-4 text-sm">
-              <span className="text-gray-600">{rows.length} rows parsed</span>
-              <span className="text-green-600 font-medium">{validRows.length} valid</span>
-              {invalidRows.length > 0 && <span className="text-red-600 font-medium">{invalidRows.length} with errors</span>}
-              <span className="text-blue-600 font-medium">{selectedRows.size} selected</span>
+            <div className="flex gap-4 text-sm flex-wrap">
+              <span className="text-white/50">{rows.length} rows parsed</span>
+              <span className="text-emerald-400 font-semibold">{validRows.length} valid</span>
+              {invalidRows.length > 0 && <span className="text-rose-400 font-semibold">{invalidRows.length} with errors</span>}
+              <span className="text-indigo-400 font-semibold">{selectedRows.size} selected</span>
             </div>
             {canUpload && (
               <button
                 onClick={upload}
                 disabled={uploading || selectedRows.size === 0}
-                className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 flex items-center gap-2"
+                className="px-5 py-2 rounded-xl text-sm font-semibold text-white flex items-center gap-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                  boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
+                }}
               >
                 {uploading ? (
-                  <><span className="animate-spin">⟳</span> Uploading…</>
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Uploading…
+                  </>
                 ) : (
-                  <>⬆ Upload {selectedRows.size} Record{selectedRows.size !== 1 ? "s" : ""}</>
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload {selectedRows.size} Record{selectedRows.size !== 1 ? "s" : ""}
+                  </>
                 )}
               </button>
             )}
           </div>
 
           {/* Table */}
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="rounded-2xl overflow-hidden" style={glassStyle}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                   <tr>
                     <th className="px-3 py-3 text-left">
                       <input
                         type="checkbox"
                         checked={allValidSelected && validRows.length > 0}
                         onChange={toggleAll}
-                        className="rounded"
+                        className="rounded accent-indigo-500"
                         title="Select all valid rows"
                       />
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-white/40 uppercase tracking-widest">#</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-white/40 uppercase tracking-widest">Status</th>
                     {schema.map((col) => (
-                      <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                      <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold text-white/40 uppercase tracking-widest whitespace-nowrap">
                         {col.label}{col.required ? " *" : ""}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {rows.map((row) => {
+                <tbody>
+                  {rows.map((row, i) => {
                     const hasError = row.errors.length > 0;
                     const isSelected = selectedRows.has(row.index);
                     return (
                       <tr
                         key={row.index}
-                        className={`${hasError ? "bg-red-50" : isSelected ? "bg-blue-50" : "hover:bg-gray-50"}`}
+                        style={{
+                          background: hasError
+                            ? "rgba(244,63,94,0.06)"
+                            : isSelected
+                            ? "rgba(99,102,241,0.08)"
+                            : undefined,
+                          borderBottom: i < rows.length - 1 ? "1px solid rgba(255,255,255,0.05)" : undefined,
+                        }}
                       >
                         <td className="px-3 py-2.5">
                           <input
@@ -391,22 +430,22 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
                             checked={isSelected}
                             disabled={hasError}
                             onChange={() => toggleRow(row.index)}
-                            className="rounded disabled:opacity-30"
+                            className="rounded accent-indigo-500 disabled:opacity-30"
                           />
                         </td>
-                        <td className="px-3 py-2.5 text-gray-400 text-xs">{row.index + 1}</td>
+                        <td className="px-3 py-2.5 text-white/30 text-xs">{row.index + 1}</td>
                         <td className="px-3 py-2.5">
                           {hasError ? (
-                            <span title={row.errors.join(", ")} className="text-xs text-red-600 cursor-help">
+                            <span title={row.errors.join(", ")} className="text-xs text-rose-400 cursor-help">
                               ⚠ {row.errors[0]}{row.errors.length > 1 ? ` +${row.errors.length - 1}` : ""}
                             </span>
                           ) : (
-                            <span className="text-xs text-green-600">✓ Valid</span>
+                            <span className="text-xs text-emerald-400 font-medium">✓ Valid</span>
                           )}
                         </td>
                         {schema.map((col) => (
-                          <td key={col.key} className="px-3 py-2.5 text-gray-700 whitespace-nowrap max-w-[180px] truncate">
-                            {row.data[col.key] || <span className="text-gray-300">—</span>}
+                          <td key={col.key} className="px-3 py-2.5 text-white/70 whitespace-nowrap max-w-[180px] truncate">
+                            {row.data[col.key] || <span className="text-white/20">—</span>}
                           </td>
                         ))}
                       </tr>
@@ -418,17 +457,21 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
           </div>
 
           {!canUpload && (
-            <p className="text-sm text-orange-600">
+            <p className="text-sm text-amber-400/80">
               Your role ({userRole}) cannot import {type}. Contact an admin.
             </p>
           )}
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty state / drop zone */}
       {rows.length === 0 && !fileName && (
         <div
-          className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          className="rounded-2xl p-14 text-center cursor-pointer transition-all duration-200"
+          style={{
+            border: "2px dashed rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.03)",
+          }}
           onClick={() => fileRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
@@ -436,10 +479,22 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
             const file = e.dataTransfer.files[0];
             if (file) handleFile(file);
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)";
+            e.currentTarget.style.background = "rgba(99,102,241,0.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+            e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+          }}
         >
-          <div className="text-4xl mb-3">📊</div>
-          <p className="text-sm font-medium text-gray-700">Drop your CSV or Excel file here</p>
-          <p className="text-xs text-gray-400 mt-1">or click to browse</p>
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-white/70">Drop your CSV or Excel file here</p>
+          <p className="text-xs text-white/30 mt-1.5">or click to browse · .csv, .xlsx, .xls</p>
         </div>
       )}
     </div>

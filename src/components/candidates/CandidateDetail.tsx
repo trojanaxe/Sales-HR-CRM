@@ -7,11 +7,18 @@ import NotesThread from "@/components/shared/NotesThread";
 import CandidateForm from "./CandidateForm";
 
 const SKILL_COLORS = [
-  "bg-blue-100 text-blue-700",
-  "bg-green-100 text-green-700",
-  "bg-purple-100 text-purple-700",
-  "bg-orange-100 text-orange-700",
+  "bg-sky-500/20 text-sky-300 border border-sky-500/25",
+  "bg-emerald-500/20 text-emerald-300 border border-emerald-500/25",
+  "bg-violet-500/20 text-violet-300 border border-violet-500/25",
+  "bg-amber-500/20 text-amber-300 border border-amber-500/25",
 ];
+
+const glassCard = {
+  background: "rgba(255,255,255,0.06)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
 
 export default function CandidateDetail({
   id,
@@ -49,7 +56,7 @@ export default function CandidateDetail({
     setUploading(false);
   }
 
-  if (loading) return <div className="p-8 text-gray-400 text-sm">Loading…</div>;
+  if (loading) return <div className="p-8 text-white/30 text-sm">Loading…</div>;
   if (!candidate) return null;
   if (editing) return <CandidateForm existing={candidate} />;
 
@@ -59,17 +66,16 @@ export default function CandidateDetail({
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between">
         <div>
-          <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-gray-700 mb-2">← Back</button>
-          <h1 className="text-2xl font-bold text-gray-900">{candidate.name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {candidate.candidateId} · {candidate.source}
-          </p>
+          <button onClick={() => router.back()} className="text-sm text-white/50 hover:text-white/90 transition-colors mb-2 cursor-pointer">← Back</button>
+          <h1 className="text-2xl font-bold text-white tracking-tight">{candidate.name}</h1>
+          <p className="text-sm text-white/40 mt-0.5">{candidate.candidateId} · {candidate.source}</p>
         </div>
         <div className="flex gap-2">
           {(userRole === "admin" || userRole === "hr") && (
             <button
               onClick={() => setEditing(true)}
-              className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50"
+              className="px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all duration-200 cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
               Edit
             </button>
@@ -84,7 +90,8 @@ export default function CandidateDetail({
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-green-400"
+            className="px-3 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
           >
             {uploading ? "Uploading…" : "Upload Resume"}
           </button>
@@ -94,10 +101,10 @@ export default function CandidateDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {/* Profile */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 grid grid-cols-2 gap-4">
+          <div className="rounded-2xl p-5 grid grid-cols-2 gap-4" style={glassCard}>
             <InfoRow label="Email" value={candidate.email} />
             <InfoRow label="Phone" value={candidate.phone} />
-            <InfoRow label="LinkedIn" value={candidate.linkedIn ? <a href={candidate.linkedIn} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm">View</a> : null} />
+            <InfoRow label="LinkedIn" value={candidate.linkedIn ? <a href={candidate.linkedIn} target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">View Profile</a> : null} />
             <InfoRow label="Location" value={candidate.currentLocation} />
             <InfoRow label="Willing to Relocate" value={candidate.willingToRelocate ? "Yes" : "No"} />
             <InfoRow label="Experience" value={candidate.experience != null ? `${candidate.experience} years` : null} />
@@ -106,14 +113,14 @@ export default function CandidateDetail({
           </div>
 
           {/* Skills */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Skills</h3>
+          <div className="rounded-2xl p-5" style={glassCard}>
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Skills</h3>
             {candidate.skills.length === 0 ? (
-              <p className="text-sm text-gray-400">No skills added.</p>
+              <p className="text-sm text-white/30">No skills added.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {candidate.skills.map((s: string, i: number) => (
-                  <span key={s} className={`px-2 py-1 rounded-full text-xs font-medium ${SKILL_COLORS[i % SKILL_COLORS.length]}`}>
+                  <span key={s} className={`px-2.5 py-1 rounded-full text-xs font-medium ${SKILL_COLORS[i % SKILL_COLORS.length]}`}>
                     {s}
                   </span>
                 ))}
@@ -122,38 +129,37 @@ export default function CandidateDetail({
           </div>
 
           {/* Resume */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Resume</h3>
+          <div className="rounded-2xl p-5" style={glassCard}>
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Resume</h3>
             {activeResume ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{activeResume.fileName}</p>
-                  <p className="text-xs text-gray-400">
-                    Uploaded {new Date(activeResume.uploadedAt).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm font-semibold text-white/80">{activeResume.fileName}</p>
+                  <p className="text-xs text-white/30">Uploaded {new Date(activeResume.uploadedAt).toLocaleDateString()}</p>
                 </div>
                 <a
                   href={`/api/resumes/${activeResume.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50"
+                  className="px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all duration-200"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
                 >
                   View
                 </a>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No resume uploaded.</p>
+              <p className="text-sm text-white/30">No resume uploaded.</p>
             )}
             {candidate.resumes.length > 1 && (
               <details className="mt-3">
-                <summary className="text-xs text-gray-500 cursor-pointer">
+                <summary className="text-xs text-white/40 cursor-pointer hover:text-white/60 transition-colors">
                   {candidate.resumes.length - 1} older version(s)
                 </summary>
                 <div className="mt-2 space-y-1">
                   {candidate.resumes.filter((r: any) => !r.isActive).map((r: any) => (
-                    <div key={r.id} className="flex items-center justify-between text-xs text-gray-500">
+                    <div key={r.id} className="flex items-center justify-between text-xs text-white/40">
                       <span>{r.fileName}</span>
-                      <a href={`/api/resumes/${r.id}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">View</a>
+                      <a href={`/api/resumes/${r.id}`} target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">View</a>
                     </div>
                   ))}
                 </div>
@@ -163,17 +169,17 @@ export default function CandidateDetail({
 
           {/* Pipeline entries */}
           {candidate.pipelineEntries.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <div className="rounded-2xl p-5" style={glassCard}>
+              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">
                 In Pipeline ({candidate.pipelineEntries.length})
               </h3>
               <div className="space-y-2">
                 {candidate.pipelineEntries.map((pe: any) => (
                   <div key={pe.id} className="flex items-center justify-between text-sm">
-                    <Link href={`/requirements/${pe.requirement.id}`} className="text-blue-600 hover:underline">
+                    <Link href={`/requirements/${pe.requirement.id}`} className="text-indigo-400 hover:text-indigo-300 transition-colors">
                       {pe.requirement.reqId} — {pe.requirement.clientGroup} ({pe.requirement.jobRole})
                     </Link>
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-white/10 text-white/60 px-2 py-0.5 rounded-full border border-white/10">
                       {pe.stage.name}
                     </span>
                   </div>
@@ -200,8 +206,8 @@ export default function CandidateDetail({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <span className="text-xs text-gray-500 block">{label}</span>
-      <span className="text-sm text-gray-900">{value || <span className="text-gray-400">—</span>}</span>
+      <span className="text-xs text-white/40 block font-medium uppercase tracking-widest mb-0.5">{label}</span>
+      <span className="text-sm text-white/80">{value || <span className="text-white/25">—</span>}</span>
     </div>
   );
 }
