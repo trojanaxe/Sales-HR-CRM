@@ -118,6 +118,29 @@ function validateRows(rows: Row[], schema: ColumnDef[]): ParsedRow[] {
   });
 }
 
+function downloadSample(type: UploadType) {
+  const schema = SCHEMAS[type];
+  const headers = schema.map((c) => c.label).join(",");
+  const exampleRows =
+    type === "candidates"
+      ? [
+          "John Smith,john@email.com,+1-555-0101,Austin TX,7,\"Salesforce, CPQ, Apex\",Green Card,linkedin,yes,https://linkedin.com/in/johnsmith",
+          "Sarah Johnson,sarah@email.com,+1-555-0102,Remote,5,\"Java, Spring Boot\",H1B,referral,no,",
+        ]
+      : [
+          "TechCorp,Salesforce Developer,high,open,C2C,Austin TX,5-8 years,$80-95/hr,VendorX,IT,,contact@techcorp.com,+1-555-0200,",
+          "FinanceHub,Java Backend Engineer,medium,open,W2,Remote,3+ years,$70-85/hr,,,Jane Doe,jane@financehub.com,+1-555-0201,https://jd.example.com/123",
+        ];
+  const csv = [headers, ...exampleRows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sample-${type}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function BulkUploadClient({ userRole }: { userRole: string }) {
@@ -223,6 +246,18 @@ export default function BulkUploadClient({ userRole }: { userRole: string }) {
               {userRole !== "sales" && <option value="candidates">Candidates</option>}
               {(userRole === "admin" || userRole === "sales") && <option value="requirements">Requirements</option>}
             </select>
+          </div>
+
+          {/* Sample download */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Sample file</label>
+            <button
+              onClick={() => downloadSample(type)}
+              className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+            >
+              <span>⬇</span> Download Sample
+            </button>
+            <p className="text-xs text-gray-400 mt-1">CSV with example rows</p>
           </div>
 
           {/* File picker */}
