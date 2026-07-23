@@ -20,7 +20,7 @@ const PRIORITY_BADGE: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  open: "Open",
+  new: "New",
   in_progress: "In Progress",
   on_hold: "On Hold",
   closed_won: "Closed Won",
@@ -28,7 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  open: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  new: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
   in_progress: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
   on_hold: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   closed_won: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
@@ -77,7 +77,10 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
         <p className="text-sm text-white/40 mt-1 capitalize">{user.role} Dashboard</p>
       </div>
 
-      {/* Key metrics */}
+      {/* Key metrics — every card is clickable and opens the filtered
+          records it represents, respecting the viewer's own role scope
+          (the underlying /api/requirements and /api/pipeline routes already
+          scope results by role, so these links can't leak data). */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total Requirements"
@@ -85,6 +88,7 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
           icon="📋"
           gradient="from-indigo-600/20 to-indigo-600/5"
           valueColor="text-white"
+          href="/requirements"
         />
         <StatCard
           label="Open Requirements"
@@ -92,6 +96,7 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
           icon="🟢"
           gradient="from-sky-600/20 to-sky-600/5"
           valueColor="text-sky-300"
+          href="/requirements?status=new"
         />
         {user.role !== "sales" && (
           <StatCard
@@ -115,6 +120,7 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
           icon="🏆"
           gradient="from-emerald-600/20 to-emerald-600/5"
           valueColor="text-emerald-300"
+          href="/pipeline"
         />
       </div>
 
@@ -128,10 +134,10 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
             ) : (
               <div className="space-y-2.5">
                 {stats?.pipelineSummary.map((s) => (
-                  <div key={s.stageName} className="flex items-center justify-between">
+                  <Link key={s.stageName} href="/pipeline" className="flex items-center justify-between hover:opacity-80 transition-opacity cursor-pointer">
                     <span className="text-sm text-white/70">{s.stageName}</span>
                     <span className="text-sm font-bold text-white bg-white/10 px-2.5 py-0.5 rounded-full">{s.count}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -146,12 +152,12 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
           ) : (
             <div className="space-y-2.5">
               {stats?.reqsByPriority.map((r) => (
-                <div key={r.priority} className="flex items-center justify-between">
+                <Link key={r.priority} href={`/requirements?priority=${r.priority}`} className="flex items-center justify-between hover:opacity-80 transition-opacity cursor-pointer">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${PRIORITY_BADGE[r.priority] ?? "bg-white/10 text-white/60"}`}>
                     {r.priority}
                   </span>
                   <span className="text-sm font-bold text-white">{r._count}</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -165,12 +171,12 @@ export default function DashboardClient({ user }: { user: { id: string; name: st
           ) : (
             <div className="space-y-2.5">
               {stats?.reqsByStatus.map((r) => (
-                <div key={r.status} className="flex items-center justify-between">
+                <Link key={r.status} href={`/requirements?status=${r.status}`} className="flex items-center justify-between hover:opacity-80 transition-opacity cursor-pointer">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${STATUS_BADGE[r.status] ?? "bg-white/10 text-white/60"}`}>
                     {STATUS_LABELS[r.status] || r.status}
                   </span>
                   <span className="text-sm font-bold text-white">{r._count}</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

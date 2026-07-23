@@ -32,7 +32,7 @@ export async function POST(
       data: {
         assignedHRId: assignTo,
         claimedAt: new Date(),
-        status: requirement.status === "open" ? "in_progress" : requirement.status,
+        status: requirement.status === "new" ? "in_progress" : requirement.status,
       },
       include: {
         assignedHR: { select: { id: true, name: true } },
@@ -60,9 +60,12 @@ export async function DELETE(
 
     if (user.role === "hr" && requirement.assignedHRId !== user.id) return forbidden();
 
+    // Unclaiming re-opens the 3-hour claim SLA: reset the "available since"
+    // clock and the escalation gate so this requirement gets its own fresh
+    // window instead of instantly re-escalating against the original timer.
     const updated = await prisma.requirement.update({
       where: { id },
-      data: { assignedHRId: null, claimedAt: null },
+      data: { assignedHRId: null, claimedAt: null, availableSince: new Date(), claimEscalatedAt: null },
     });
     return ok(updated);
   } catch (e: unknown) {

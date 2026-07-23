@@ -20,6 +20,10 @@ export function notFound(resource = "Resource") {
   return NextResponse.json({ error: `${resource} not found` }, { status: 404 });
 }
 
+export function validationError(message: string, missingFields?: string[]) {
+  return NextResponse.json({ error: message, missingFields }, { status: 400 });
+}
+
 export function serverError(e: unknown) {
   console.error(e);
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });

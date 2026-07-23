@@ -3,8 +3,9 @@ import { useState } from "react";
 import UsersPanel from "./UsersPanel";
 import ContractModesPanel from "./ContractModesPanel";
 import PipelineStagesPanel from "./PipelineStagesPanel";
+import MatchSettingsPanel from "./MatchSettingsPanel";
 
-type Tab = "users" | "contract-modes" | "pipeline-stages";
+type Tab = "users" | "contract-modes" | "pipeline-stages" | "match-settings";
 
 export default function AdminClient() {
   const [tab, setTab] = useState<Tab>("users");
@@ -13,6 +14,7 @@ export default function AdminClient() {
     { id: "users", label: "Users" },
     { id: "contract-modes", label: "Contract Modes" },
     { id: "pipeline-stages", label: "Pipeline Stages" },
+    { id: "match-settings", label: "JD Matching" },
   ];
 
   return (
@@ -47,6 +49,7 @@ export default function AdminClient() {
       {tab === "users" && <UsersPanel />}
       {tab === "contract-modes" && <ContractModesPanel />}
       {tab === "pipeline-stages" && <PipelineStagesPanel />}
+      {tab === "match-settings" && <MatchSettingsPanel />}
     </div>
   );
 }

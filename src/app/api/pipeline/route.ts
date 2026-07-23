@@ -66,8 +66,20 @@ export async function POST(req: NextRequest) {
 
     if (!stage) return error("Pipeline stage not found");
 
+    // A candidate already submitted to this requirement is skipped, not
+    // duplicated — this is the single place candidate submission happens
+    // (both "Select Existing"/"Upload New" in SubmitCandidatesModal and the
+    // JD Candidate Matching "Submit to Requirement" action go through this
+    // same endpoint), so the dedupe guard only needs to live here once.
+    const alreadySubmitted = await prisma.pipelineEntry.findMany({
+      where: { requirementId, candidateId: { in: ids } },
+      select: { candidateId: true },
+    });
+    const alreadySubmittedIds = new Set(alreadySubmitted.map((e) => e.candidateId));
+    const newIds = ids.filter((cid) => !alreadySubmittedIds.has(cid));
+
     const created = await Promise.all(
-      ids.map(async (candidateId) => {
+      newIds.map(async (candidateId) => {
         const entry = await prisma.pipelineEntry.create({
           data: {
             candidateId,
@@ -103,7 +115,7 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    return ok(created, 201);
+    return ok({ created, skippedCandidateIds: Array.from(alreadySubmittedIds) }, 201);
   } catch (e: unknown) {
     if (e instanceof Error && (e.message === "Unauthorized" || e.message === "Forbidden"))
       return unauthorized();

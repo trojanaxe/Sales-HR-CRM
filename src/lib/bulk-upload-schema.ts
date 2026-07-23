@@ -12,7 +12,7 @@ export const SCHEMAS: Record<UploadType, ColumnDef[]> = {
     { key: "clientGroup",   label: "Client Group",         required: true },
     { key: "jobRole",       label: "Job Role",             required: true },
     { key: "priority",      label: "Priority",             required: false, hint: "high / medium / low" },
-    { key: "status",        label: "Status",               required: false, hint: "open / in_progress / on_hold / closed_won / closed_lost" },
+    { key: "status",        label: "Status",               required: false, hint: "new / in_progress / on_hold / closed_won / closed_lost" },
     { key: "contractMode",  label: "Contract Mode",        required: false, hint: "C2C / W2 / C2H" },
     { key: "location",      label: "Location",             required: false },
     { key: "experience",    label: "Experience",           required: false, hint: "e.g. 5-8 years" },

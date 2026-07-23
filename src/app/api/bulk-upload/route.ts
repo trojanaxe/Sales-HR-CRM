@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { ok, error, unauthorized, serverError } from "@/lib/api";
 import { nextReqId, nextCandidateId } from "@/lib/ids";
 import { UploadType } from "@/lib/bulk-upload-schema";
+import { createAccount, findDuplicateAccounts, resolveOrCreateContact } from "@/lib/accounts/service";
 
 type Row = Record<string, string>;
 
@@ -78,10 +79,24 @@ export async function POST(req: NextRequest) {
             ? row.priority.toLowerCase()
             : "medium";
 
-          const validStatuses = ["open", "in_progress", "on_hold", "closed_won", "closed_lost"];
+          const validStatuses = ["new", "in_progress", "on_hold", "closed_won", "closed_lost"];
           const status = validStatuses.includes((row.status || "").toLowerCase())
             ? row.status.toLowerCase()
-            : "open";
+            : "new";
+
+          // Reuse an existing Account on an exact-name match (high
+          // confidence, safe to auto-link); anything only fuzzily similar
+          // still gets its own new Account rather than silently merging,
+          // since there's no per-row confirmation UI in a batch import.
+          let accountId: string | undefined;
+          if (row.clientGroup) {
+            const duplicates = await findDuplicateAccounts(row.clientGroup);
+            const exact = duplicates.find((d) => d.reasons.includes("exact_name"));
+            accountId = exact ? exact.id : (await createAccount({ name: row.clientGroup, industry: row.industry }, user.id)).id;
+          }
+          const contact = accountId && (row.contactName || row.contactEmail)
+            ? await resolveOrCreateContact(accountId, { name: row.contactName, email: row.contactEmail, phone: row.contactPhone }, user.id)
+            : null;
 
           await prisma.requirement.create({
             data: {
@@ -89,7 +104,7 @@ export async function POST(req: NextRequest) {
               clientGroup: row.clientGroup,
               jobRole: row.jobRole,
               priority: priority as "high" | "medium" | "low",
-              status: status as "open" | "in_progress" | "on_hold" | "closed_won" | "closed_lost",
+              status: status as "new" | "in_progress" | "on_hold" | "closed_won" | "closed_lost",
               contractModeId: contractModeId || null,
               location: row.location || null,
               experience: row.experience || null,
@@ -101,6 +116,8 @@ export async function POST(req: NextRequest) {
               contactPhone: row.contactPhone || null,
               jdLink: row.jdLink || null,
               sdrId: user.id,
+              accountId,
+              contactId: contact?.id,
             },
           });
           created.push(i);

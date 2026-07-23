@@ -34,7 +34,14 @@ export default function CandidateDetail({
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [reparsing, setReparsing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function loadProfile() {
+    const res = await fetch(`/api/candidates/${id}/profile`);
+    setProfile(res.ok ? await res.json() : null);
+  }
 
   async function load() {
     const res = await fetch(`/api/candidates/${id}`);
@@ -42,6 +49,7 @@ export default function CandidateDetail({
     if (!res.ok) { toast.error("Not found"); router.push("/candidates"); return; }
     setCandidate(data);
     setLoading(false);
+    loadProfile();
   }
 
   useEffect(() => { load(); }, [id]);
@@ -54,6 +62,15 @@ export default function CandidateDetail({
     if (res.ok) { toast.success("Resume uploaded"); load(); }
     else { const d = await res.json(); toast.error(d.error || "Upload failed"); }
     setUploading(false);
+  }
+
+  async function reparseResume() {
+    if (!activeResume) return;
+    setReparsing(true);
+    const res = await fetch(`/api/resumes/${activeResume.id}/parse`, { method: "POST" });
+    if (res.ok) { toast.success("Resume re-parsed"); loadProfile(); }
+    else { const d = await res.json(); toast.error(d.error || "Parse failed"); }
+    setReparsing(false);
   }
 
   if (loading) return <div className="p-8 text-white/30 text-sm">Loading…</div>;
@@ -109,6 +126,11 @@ export default function CandidateDetail({
             <InfoRow label="Willing to Relocate" value={candidate.willingToRelocate ? "Yes" : "No"} />
             <InfoRow label="Experience" value={candidate.experience != null ? `${candidate.experience} years` : null} />
             <InfoRow label="Visa Status" value={candidate.visaStatus} />
+            <InfoRow label="Current Job Title" value={candidate.currentJobTitle} />
+            <InfoRow label="Notice Period" value={candidate.noticePeriod} />
+            <InfoRow label="Current CTC" value={candidate.currentCTC} />
+            <InfoRow label="Expected CTC" value={candidate.expectedCTC} />
+            <InfoRow label="Source" value={candidate.sourceDetail ? `${candidate.source} — ${candidate.sourceDetail}` : candidate.source} />
             <InfoRow label="Owner" value={candidate.owner.name} />
           </div>
 
@@ -130,7 +152,18 @@ export default function CandidateDetail({
 
           {/* Resume */}
           <div className="rounded-2xl p-5" style={glassCard}>
-            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Resume</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Resume</h3>
+              {activeResume && (
+                <button
+                  onClick={reparseResume}
+                  disabled={reparsing}
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {reparsing ? "Re-parsing…" : "Re-parse intelligence"}
+                </button>
+              )}
+            </div>
             {activeResume ? (
               <div className="flex items-center justify-between">
                 <div>
@@ -167,6 +200,27 @@ export default function CandidateDetail({
             )}
           </div>
 
+          {/* Resume Intelligence */}
+          {profile && (
+            <div className="rounded-2xl p-5" style={glassCard}>
+              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">
+                Resume Intelligence
+              </h3>
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <InfoRow
+                  label="Detected Experience"
+                  value={profile.totalExperienceYears != null ? `${profile.totalExperienceYears} years` : null}
+                />
+                <InfoRow label="Parsed" value={new Date(profile.parsedAt).toLocaleString()} />
+              </div>
+              <KeywordGroup label="Technologies" items={profile.technologies} />
+              <KeywordGroup label="Roles" items={profile.roles} />
+              <KeywordGroup label="Industries" items={profile.industries} />
+              <KeywordGroup label="Certifications" items={profile.certifications} />
+              <KeywordGroup label="Companies" items={profile.companies} />
+            </div>
+          )}
+
           {/* Pipeline entries */}
           {candidate.pipelineEntries.length > 0 && (
             <div className="rounded-2xl p-5" style={glassCard}>
@@ -198,6 +252,32 @@ export default function CandidateDetail({
             onNoteAdded={load}
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function KeywordGroup({ label, items }: { label: string; items?: string[] }) {
+  if (!items || items.length === 0) return null;
+  // Dedupe case-insensitively — extracted fields (e.g. companies) can contain
+  // repeats from the source resume, and duplicate values also broke React's
+  // key uniqueness here (two "India" entries rendered with the same key).
+  const seen = new Set<string>();
+  const uniqueItems = items.filter((item) => {
+    const key = item.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return (
+    <div className="mb-3 last:mb-0">
+      <span className="text-xs text-white/40 block font-medium uppercase tracking-widest mb-1.5">{label}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {uniqueItems.map((item) => (
+          <span key={item} className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/60 border border-white/10">
+            {item}
+          </span>
+        ))}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { ok, error, unauthorized, serverError } from "@/lib/api";
 import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { randomUUID } from "crypto";
+import { parseJDAndPersist } from "@/lib/resume/service";
 
 const JD_DIR =
   process.env.JD_STORAGE_PATH || join(process.cwd(), "uploads", "jd");
@@ -29,6 +30,15 @@ export async function POST(req: NextRequest) {
       where: { id: requirementId },
       data: { jdFilePath: filePath, jdReceived: true },
     });
+
+    // Best-effort: extract required/preferred skills from the JD so it's
+    // immediately ready for candidate matching. Failures don't block the
+    // upload — parsing can be retried via POST /api/requirements/[id]/jd-profile.
+    try {
+      await parseJDAndPersist(requirementId);
+    } catch (parseError) {
+      console.error("JD auto-parse failed:", parseError);
+    }
 
     return ok({ filePath: updated.jdFilePath });
   } catch (e: unknown) {

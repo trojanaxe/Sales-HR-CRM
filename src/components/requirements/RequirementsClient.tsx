@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import ClaimTimer from "./ClaimTimer";
 
 interface Requirement {
   id: string;
@@ -16,11 +17,12 @@ interface Requirement {
   assignedHR: { id: string; name: string } | null;
   sdr: { id: string; name: string };
   contractMode: { label: string } | null;
+  availableSince: string;
   _count: { pipelineEntries: number };
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  open: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  new: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
   in_progress: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
   on_hold: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   closed_won: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
@@ -34,7 +36,7 @@ const PRIORITY_BADGE: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  open: "Open",
+  new: "New",
   in_progress: "In Progress",
   on_hold: "On Hold",
   closed_won: "Closed Won",
@@ -135,7 +137,7 @@ export default function RequirementsClient({ userRole, userId }: { userRole: str
           />
           <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${inputCls} w-44`}>
             <option value="">All Statuses</option>
-            <option value="open">Open</option>
+            <option value="new">New</option>
             <option value="in_progress">In Progress</option>
             <option value="on_hold">On Hold</option>
             <option value="closed_won">Closed Won</option>
@@ -178,7 +180,7 @@ export default function RequirementsClient({ userRole, userId }: { userRole: str
             <table className="w-full text-sm">
               <thead style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                 <tr>
-                  {["ID", "Client", "Role", "Priority", "Status", "Assigned HR", "SDR", "Pipeline", "Added", ""].map((h) => (
+                  {["ID", "Client", "Role", "Priority", "Status", "Assigned HR", "SDR", "Resumes Submitted", "Added", ""].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-widest whitespace-nowrap">
                       {h}
                     </th>
@@ -215,7 +217,10 @@ export default function RequirementsClient({ userRole, userId }: { userRole: str
                     </td>
                     <td className="px-4 py-3 text-white/60">
                       {req.assignedHR ? req.assignedHR.name : (
-                        <span className="text-amber-400 font-semibold">Unclaimed</span>
+                        <div className="space-y-0.5">
+                          <span className="text-amber-400 font-semibold block">Unclaimed</span>
+                          <ClaimTimer availableSince={req.availableSince} />
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-white/60">{req.sdr.name}</td>

@@ -5,6 +5,7 @@ import { ok, error, unauthorized, notFound, serverError } from "@/lib/api";
 import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { randomUUID } from "crypto";
+import { parseResumeAndPersist } from "@/lib/resume/service";
 
 const RESUME_DIR =
   process.env.RESUME_STORAGE_PATH ||
@@ -40,6 +41,8 @@ export async function POST(
       data: { isActive: false },
     });
 
+    const isReplacement = await prisma.resume.count({ where: { candidateId: id } }) > 0;
+
     const resume = await prisma.resume.create({
       data: {
         candidateId: id,
@@ -47,17 +50,33 @@ export async function POST(
         fileName: file.name,
         mimeType: file.type || "application/octet-stream",
         isActive: true,
+        uploadedById: user.id,
       },
     });
 
-    // Add a note about the upload
+    // Add a note about the upload — doubles as the "who replaced the resume
+    // and when" audit trail required for the HR submit-candidate workflow
+    // (Resume.uploadedById + uploadedAt cover the same fact structurally,
+    // this note just makes it visible in the activity thread).
     await prisma.note.create({
       data: {
-        body: `Resume uploaded: ${file.name}`,
+        body: isReplacement
+          ? `Resume replaced by ${user.name}: ${file.name}`
+          : `Resume uploaded: ${file.name}`,
         authorId: user.id,
         candidateId: id,
       },
     });
+
+    // Best-effort: extract a structured intelligence profile from the resume.
+    // Unsupported formats or parse failures should not block the upload —
+    // the file is already stored; parsing can be retried via
+    // POST /api/resumes/[id]/parse.
+    try {
+      await parseResumeAndPersist(resume.id);
+    } catch (parseError) {
+      console.error("Resume auto-parse failed:", parseError);
+    }
 
     return ok(resume, 201);
   } catch (e: unknown) {

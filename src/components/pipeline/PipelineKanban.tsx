@@ -32,6 +32,14 @@ const PRIORITY_GLOW: Record<string, string> = {
   low: "rgba(52,211,153,0.15)",
 };
 
+// Text label alongside the accent color — border-color alone isn't an
+// accessible way to convey priority (Part 4 of the CRM enhancement spec).
+const PRIORITY_BADGE: Record<string, string> = {
+  high: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+  medium: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+  low: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+};
+
 const glassStyle = {
   background: "rgba(255,255,255,0.06)",
   backdropFilter: "blur(20px)",
@@ -216,10 +224,13 @@ function KanbanCard({
       </div>
       <Link
         href={`/requirements/${entry.requirement.id}`}
-        className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors block mb-2"
+        className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors block mb-1.5"
       >
         {entry.requirement.reqId} · {entry.requirement.clientGroup}
       </Link>
+      <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold capitalize mb-2 ${PRIORITY_BADGE[entry.requirement.priority] ?? "bg-white/10 text-white/60"}`}>
+        {entry.requirement.priority} priority
+      </span>
       <div className="flex flex-wrap gap-1 mb-2">
         {entry.candidate.skills.slice(0, 2).map((s) => (
           <span

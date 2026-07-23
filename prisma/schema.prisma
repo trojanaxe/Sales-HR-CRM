@@ -16,7 +16,7 @@ enum Role {
 }
 
 enum ReqStatus {
-  open
+  new
   in_progress
   on_hold
   closed_won
@@ -29,11 +29,30 @@ enum Priority {
   low
 }
 
+enum Negotiable {
+  yes
+  no
+  maybe
+}
+
+enum WorkMode {
+  onsite
+  remote
+  hybrid
+}
+
 enum CandidateSource {
   bench
   external
   referral
   other
+}
+
+enum KeywordCategory {
+  skill
+  role
+  industry
+  certification
 }
 
 // ─── Users ────────────────────────────────────────────────────────────────────
@@ -57,6 +76,11 @@ model User {
   notes                Note[]
   screenings           HRScreening[]
   sessions             Session[]
+  adhocJDs             AdhocJD[]               @relation("AdhocJDCreatedBy")
+  createdAccounts      Account[]               @relation("AccountCreatedBy")
+  createdContacts      Contact[]               @relation("ContactCreatedBy")
+  notifications        Notification[]
+  uploadedResumes      Resume[]                @relation("ResumeUploadedBy")
 }
 
 model Session {
@@ -87,7 +111,7 @@ model ContractMode {
 model Requirement {
   id          String    @id @default(cuid())
   reqId       String    @unique
-  status      ReqStatus @default(open)
+  status      ReqStatus @default(new)
   priority    Priority  @default(medium)
   dateAdded   DateTime  @default(now())
   closingDate DateTime?
@@ -98,7 +122,13 @@ model Requirement {
   assignedHRId  String?
   assignedHR    User?    @relation("ReqAssignedHR", fields: [assignedHRId], references: [id])
   claimedAt     DateTime?
-  collaborators ReqCollaborator[]
+  // 3-hour claim SLA: reset to now() whenever the requirement becomes
+  // unclaimed (created, or explicitly un-claimed); escalation checker
+  // compares against this, not dateAdded, so an unclaim/reclaim cycle gets
+  // its own fresh 3-hour window instead of instantly re-escalating.
+  availableSince   DateTime  @default(now())
+  claimEscalatedAt DateTime?
+  collaborators    ReqCollaborator[]
 
   clientGroup     String
   vendor          String?
@@ -108,6 +138,11 @@ model Requirement {
   contactEmail    String?
   contactPhone    String?
 
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
   jobRole        String
   experience     String?
   budget         String?
@@ -115,16 +150,21 @@ model Requirement {
   contractModeId String?
   contractMode   ContractMode? @relation(fields: [contractModeId], references: [id])
   industry       String?
+  negotiable     Negotiable?
+  workMode       WorkMode?
 
   meetingStatus String?
   jdReceived    Boolean @default(false)
   jdLink        String?
   jdFilePath    String?
+  jdText        String?
 
   wonLostReason String?
 
   pipelineEntries PipelineEntry[]
   notes           Note[]          @relation("RequirementNotes")
+  jdProfile       JDProfile?
+  notifications   Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -133,6 +173,76 @@ model Requirement {
   @@index([clientGroup])
   @@index([assignedHRId])
   @@index([sdrId])
+  @@index([accountId])
+  @@index([contactId])
+}
+
+// ─── Accounts & Contacts (CRM) ─────────────────────────────────────────────
+
+model Account {
+  id             String  @id @default(cuid())
+  accountId      String  @unique
+  name           String
+  normalizedName String
+  domain         String?
+  website        String?
+  industry       String?
+  notes          String?
+
+  createdById String
+  createdBy   User   @relation("AccountCreatedBy", fields: [createdById], references: [id])
+
+  contacts     Contact[]
+  requirements Requirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([normalizedName])
+  @@index([domain])
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name     String
+  role     String?
+  email    String?
+  phone    String?
+  linkedIn String?
+
+  createdById String
+  createdBy   User   @relation("ContactCreatedBy", fields: [createdById], references: [id])
+
+  requirements Requirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([email])
+}
+
+// ─── Notifications (in-app + escalation feed) ─────────────────────────────
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type  String
+  title String
+  body  String
+
+  requirementId String?
+  requirement   Requirement? @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
 }
 
 model ReqCollaborator {
@@ -159,9 +269,17 @@ model Candidate {
   currentLocation   String?
   willingToRelocate Boolean @default(false)
 
-  skills     String[]
-  experience Float?
-  visaStatus String?
+  skills         String[]
+  certifications String[] @default([])
+  experience     Float?
+  visaStatus     String?
+
+  currentJobTitle    String?
+  companiesWorkedFor String[]
+  noticePeriod       String?
+  currentCTC         String?
+  expectedCTC        String?
+  sourceDetail       String?
 
   source  CandidateSource @default(external)
   ownerId String
@@ -198,9 +316,142 @@ model Resume {
   uploadedAt  DateTime @default(now())
   isActive    Boolean  @default(true)
 
+  uploadedById String?
+  uploadedBy   User?   @relation("ResumeUploadedBy", fields: [uploadedById], references: [id])
+
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  profile   ResumeProfile?
 
   @@index([candidateId])
+}
+
+// ─── Resume Intelligence ──────────────────────────────────────────────────────
+
+model ResumeProfile {
+  id       String @id @default(cuid())
+  resumeId String @unique
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  candidateId String
+
+  extractedText String
+
+  name  String?
+  email String?
+  phone String?
+
+  skills               String[]
+  technologies         String[]
+  roles                String[]
+  industries           String[]
+  certifications       String[]
+  education            Json
+  projects             Json
+  totalExperienceYears Float?
+
+  currentJobTitle String?
+  companies       String[]
+  noticePeriod    String?
+  currentCTC      String?
+  expectedCTC     String?
+  location        String?
+
+  // Union of skills/technologies/roles/industries/certifications, lowercased,
+  // for fast keyword search and JD matching.
+  keywords String[]
+
+  parserVersion Int      @default(1)
+  parsedAt      DateTime @default(now())
+
+  @@index([candidateId])
+}
+
+model JDProfile {
+  id            String      @id @default(cuid())
+  requirementId String      @unique
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  extractedText String
+
+  jobTitle        String?
+  requiredSkills  String[]
+  preferredSkills String[]
+  keywords        String[]
+
+  certificationsRequired String[]
+  domainKeywords          String[]
+
+  minExperienceYears      Float?
+  maxExperienceYears      Float?
+  relevantExperienceYears Float?
+
+  location             String?
+  workModel             String?
+  employmentType        String?
+  educationRequirement  String?
+
+  parserVersion Int      @default(1)
+  parsedAt      DateTime @default(now())
+}
+
+// Standalone JD used by the JD Candidate Matching module — not tied to a
+// Requirement, so HR/Admin can test-match a JD against the whole resume
+// database without first creating a full job requirement record.
+model AdhocJD {
+  id          String @id @default(cuid())
+  title       String?
+  createdById String
+  createdBy   User   @relation("AdhocJDCreatedBy", fields: [createdById], references: [id])
+
+  jdFilePath    String?
+  jdText        String?
+  extractedText String?
+
+  jobTitle                String?
+  requiredSkills          String[]
+  preferredSkills         String[]
+  certificationsRequired  String[]
+  domainKeywords          String[]
+  keywords                String[]
+  minExperienceYears      Float?
+  maxExperienceYears      Float?
+  relevantExperienceYears Float?
+  location                String?
+  workModel               String?
+  employmentType          String?
+  educationRequirement    String?
+
+  parserVersion Int       @default(1)
+  parsedAt      DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([createdById])
+}
+
+// Admin-configurable settings for the JD matching module (currently just the
+// minimum match score used to filter the ranked results list).
+model MatchSettings {
+  id            String   @id @default("singleton")
+  minMatchScore Float    @default(70)
+  updatedAt     DateTime @updatedAt
+  updatedById   String?
+}
+
+// Growing dictionary of known skills/roles/industries/certifications, learned
+// from every resume and JD parsed. Frequency biases future keyword extraction
+// toward terms this CRM's corpus has actually seen, so matching quality
+// improves as more resumes flow through — the "learning" in Resume Intelligence.
+model SkillKeyword {
+  id       String          @id @default(cuid())
+  keyword  String          @unique
+  category KeywordCategory
+  source   String          @default("seed") // "seed" | "resume" | "jd"
+
+  frequency   Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  @@index([category])
 }
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────

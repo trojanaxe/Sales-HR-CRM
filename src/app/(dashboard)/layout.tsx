@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import Sidebar from "@/components/shared/Sidebar";
+import NotificationBell from "@/components/shared/NotificationBell";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession();
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       <Sidebar user={{ id: user.id, name: user.name, email: user.email, role: user.role }} />
+      <NotificationBell />
 
       <main className="flex-1 overflow-auto">
         <div className="p-6 min-h-full">{children}</div>

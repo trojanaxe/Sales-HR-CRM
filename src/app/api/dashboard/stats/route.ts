@@ -24,11 +24,11 @@ export async function GET() {
       ),
       prisma.requirement.count({
         where: {
-          status: { in: ["open", "in_progress"] },
+          status: { in: ["new", "in_progress"] },
           ...(user.role === "sales" ? { sdrId: user.id } : {}),
         },
       }),
-      prisma.requirement.count({ where: { assignedHRId: null, status: "open" } }),
+      prisma.requirement.count({ where: { assignedHRId: null, status: "new" } }),
       prisma.candidate.count(),
       prisma.pipelineEntry.count({
         where: {

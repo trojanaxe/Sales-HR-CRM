@@ -1,7 +1,22 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { ok, unauthorized, forbidden, notFound, serverError } from "@/lib/api";
+import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api";
+import { CandidateSource } from "@prisma/client";
+
+const VALID_SOURCES: CandidateSource[] = ["bench", "external", "referral", "other"];
+
+// Editable candidate fields only — deliberately NOT a spread of the raw
+// request body. The candidate detail page passes the full GET response
+// (owner, resumes, notes, pipelineEntries, collaborators, sdrId-style FKs,
+// etc.) back into the edit form's state, and Prisma's checked update input
+// rejects relation objects/foreign-key scalars passed that way. Whitelisting
+// here is the actual fix, not a workaround — see .agents/decisions.md.
+const EDITABLE_FIELDS = [
+  "name", "email", "phone", "linkedIn", "currentLocation", "willingToRelocate",
+  "skills", "certifications", "experience", "visaStatus", "source", "sourceDetail",
+  "currentJobTitle", "noticePeriod", "currentCTC", "expectedCTC",
+] as const;
 
 const include = {
   owner: { select: { id: true, name: true } },
@@ -47,13 +62,23 @@ export async function PATCH(
     if (user.role === "sales") return forbidden();
 
     const body = await req.json();
+
+    if (body.source !== undefined && !VALID_SOURCES.includes(body.source)) {
+      return error(`source must be one of: ${VALID_SOURCES.join(", ")}`);
+    }
+
+    const data: Record<string, unknown> = { updatedAt: new Date() };
+    for (const field of EDITABLE_FIELDS) {
+      if (body[field] !== undefined) data[field] = body[field];
+    }
+    if (data.experience !== undefined) {
+      data.experience = data.experience === "" || data.experience === null ? null : parseFloat(data.experience as string);
+    }
+    if (data.willingToRelocate !== undefined) data.willingToRelocate = Boolean(data.willingToRelocate);
+
     const updated = await prisma.candidate.update({
       where: { id },
-      data: {
-        ...body,
-        experience: body.experience ? parseFloat(body.experience) : undefined,
-        updatedAt: new Date(),
-      },
+      data,
       include,
     });
     return ok(updated);

@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireRole } from "@/lib/auth";
-import { ok, error, unauthorized, serverError } from "@/lib/api";
+import { ok, error, unauthorized, validationError, serverError } from "@/lib/api";
 import { nextReqId } from "@/lib/ids";
 import { notifyNewRequirement } from "@/lib/slack";
+import { parseJDAndPersist } from "@/lib/resume/service";
+import { createAccount, findDuplicateAccounts, resolveOrCreateContact } from "@/lib/accounts/service";
+import { validateRequirementFields, validateEnumFields } from "@/lib/requirements/validation";
+
+const MAX_JD_TEXT_LENGTH = 20000;
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,6 +36,8 @@ export async function GET(req: NextRequest) {
         sdr: { select: { id: true, name: true } },
         assignedHR: { select: { id: true, name: true } },
         contractMode: { select: { id: true, label: true } },
+        account: { select: { id: true, accountId: true, name: true } },
+        contact: { select: { id: true, name: true } },
         collaborators: { include: { user: { select: { id: true, name: true } } } },
         _count: { select: { pipelineEntries: true, notes: true } },
       },
@@ -52,11 +59,46 @@ export async function POST(req: NextRequest) {
     const {
       clientGroup, jobRole, priority, status, closingDate,
       vendor, contactName, contactRole, contactLinkedIn, contactEmail, contactPhone,
-      experience, budget, location, contractModeId, industry,
-      meetingStatus, jdReceived, jdLink, wonLostReason,
+      experience, budget, location, contractModeId, industry, negotiable, workMode,
+      meetingStatus, jdReceived, jdLink, jdText, wonLostReason,
+      accountResolution,
     } = body;
 
-    if (!clientGroup || !jobRole) return error("clientGroup and jobRole are required");
+    const merged = { ...body, priority: priority || "medium", status: status || "new" };
+    const missingFields = validateRequirementFields(merged);
+    if (missingFields.length > 0)
+      return validationError(`Missing required field(s): ${missingFields.join(", ")}`, missingFields);
+
+    const enumIssue = validateEnumFields(merged);
+    if (enumIssue) return error(enumIssue);
+
+    if (jdText && jdText.length > MAX_JD_TEXT_LENGTH)
+      return error(`JD text is too long (max ${MAX_JD_TEXT_LENGTH.toLocaleString()} characters)`);
+
+    // Account resolution: warn before silently creating a second Account for
+    // a company that already exists (Part 2.5 of the CRM enhancement spec).
+    let accountId: string;
+    if (accountResolution?.action === "use_existing") {
+      const existing = await prisma.account.findUnique({ where: { id: accountResolution.accountId } });
+      if (!existing) return error("Selected existing account not found", 404);
+      accountId = existing.id;
+    } else if (accountResolution?.action === "create_new") {
+      const created = await createAccount({ name: clientGroup, industry }, user.id);
+      accountId = created.id;
+    } else {
+      const duplicates = await findDuplicateAccounts(clientGroup);
+      if (duplicates.length > 0) {
+        return ok({ status: "duplicate_account", duplicates }, 200);
+      }
+      const created = await createAccount({ name: clientGroup, industry }, user.id);
+      accountId = created.id;
+    }
+
+    const contact = await resolveOrCreateContact(
+      accountId,
+      { name: contactName, role: contactRole, email: contactEmail, phone: contactPhone, linkedIn: contactLinkedIn },
+      user.id
+    );
 
     const reqId = await nextReqId();
 
@@ -67,17 +109,21 @@ export async function POST(req: NextRequest) {
         clientGroup,
         jobRole,
         priority: priority || "medium",
-        status: status || "open",
+        status: status || "new",
         closingDate: closingDate ? new Date(closingDate) : undefined,
         vendor, contactName, contactRole, contactLinkedIn,
         contactEmail, contactPhone, experience, budget, location,
-        contractModeId, industry, meetingStatus,
+        contractModeId, industry, negotiable, workMode, meetingStatus,
         jdReceived: Boolean(jdReceived),
-        jdLink, wonLostReason,
+        jdLink, jdText, wonLostReason,
+        accountId,
+        contactId: contact?.id,
       },
       include: {
         sdr: { select: { id: true, name: true } },
         contractMode: true,
+        account: { select: { id: true, accountId: true, name: true } },
+        contact: { select: { id: true, name: true } },
       },
     });
 
@@ -89,10 +135,20 @@ export async function POST(req: NextRequest) {
       id: requirement.id,
     });
 
+    // Best-effort: if the sales rep pasted JD text, extract required/preferred
+    // skills right away so the requirement is immediately ready for matching.
+    if (jdText && jdText.trim()) {
+      try {
+        await parseJDAndPersist(requirement.id);
+      } catch (parseError) {
+        console.error("JD auto-parse failed:", parseError);
+      }
+    }
+
     return ok(requirement, 201);
   } catch (e: unknown) {
-    if (e instanceof Error && (e.message === "Unauthorized" || e.message === "Forbidden"))
-      return unauthorized();
+    if (e instanceof Error && e.message === "Unauthorized") return unauthorized();
+    if (e instanceof Error && e.message === "Forbidden") return unauthorized();
     return serverError(e);
   }
 }
