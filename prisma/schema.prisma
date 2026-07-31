@@ -1,0 +1,563 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  sales
+  hr
+}
+
+enum ReqStatus {
+  new
+  in_progress
+  on_hold
+  closed_won
+  closed_lost
+}
+
+enum Priority {
+  high
+  medium
+  low
+}
+
+enum Negotiable {
+  yes
+  no
+  maybe
+}
+
+enum WorkMode {
+  onsite
+  remote
+  hybrid
+}
+
+enum CandidateSource {
+  bench
+  external
+  referral
+  other
+}
+
+enum KeywordCategory {
+  skill
+  role
+  industry
+  certification
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdRequirements  Requirement[]           @relation("ReqCreatedBy")
+  assignedRequirements Requirement[]           @relation("ReqAssignedHR")
+  reqCollaborations    ReqCollaborator[]
+  ownedCandidates      Candidate[]             @relation("CandidateOwner")
+  candidateCollabs     CandidateCollaborator[]
+  stageChanges         PipelineStageHistory[]
+  notes                Note[]
+  screenings           HRScreening[]
+  sessions             Session[]
+  adhocJDs             AdhocJD[]               @relation("AdhocJDCreatedBy")
+  createdAccounts      Account[]               @relation("AccountCreatedBy")
+  createdContacts      Contact[]               @relation("ContactCreatedBy")
+  notifications        Notification[]
+  uploadedResumes      Resume[]                @relation("ResumeUploadedBy")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+// ─── Contract Mode (admin-managed lookup) ────────────────────────────────────
+
+model ContractMode {
+  id           String        @id @default(cuid())
+  label        String        @unique
+  isActive     Boolean       @default(true)
+  order        Int
+  createdAt    DateTime      @default(now())
+  requirements Requirement[]
+}
+
+// ─── Requirements ─────────────────────────────────────────────────────────────
+
+model Requirement {
+  id          String    @id @default(cuid())
+  reqId       String    @unique
+  status      ReqStatus @default(new)
+  priority    Priority  @default(medium)
+  dateAdded   DateTime  @default(now())
+  closingDate DateTime?
+
+  sdrId String
+  sdr   User   @relation("ReqCreatedBy", fields: [sdrId], references: [id])
+
+  assignedHRId  String?
+  assignedHR    User?    @relation("ReqAssignedHR", fields: [assignedHRId], references: [id])
+  claimedAt     DateTime?
+  // 3-hour claim SLA: reset to now() whenever the requirement becomes
+  // unclaimed (created, or explicitly un-claimed); escalation checker
+  // compares against this, not dateAdded, so an unclaim/reclaim cycle gets
+  // its own fresh 3-hour window instead of instantly re-escalating.
+  availableSince   DateTime  @default(now())
+  claimEscalatedAt DateTime?
+  collaborators    ReqCollaborator[]
+
+  clientGroup     String
+  vendor          String?
+  contactName     String?
+  contactRole     String?
+  contactLinkedIn String?
+  contactEmail    String?
+  contactPhone    String?
+
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  jobRole        String
+  experience     String?
+  budget         String?
+  location       String?
+  contractModeId String?
+  contractMode   ContractMode? @relation(fields: [contractModeId], references: [id])
+  industry       String?
+  negotiable     Negotiable?
+  workMode       WorkMode?
+
+  meetingStatus String?
+  jdReceived    Boolean @default(false)
+  jdLink        String?
+  jdFilePath    String?
+  jdText        String?
+
+  wonLostReason String?
+
+  pipelineEntries PipelineEntry[]
+  notes           Note[]          @relation("RequirementNotes")
+  jdProfile       JDProfile?
+  notifications   Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([clientGroup])
+  @@index([assignedHRId])
+  @@index([sdrId])
+  @@index([accountId])
+  @@index([contactId])
+}
+
+// ─── Accounts & Contacts (CRM) ─────────────────────────────────────────────
+
+model Account {
+  id             String  @id @default(cuid())
+  accountId      String  @unique
+  name           String
+  normalizedName String
+  domain         String?
+  website        String?
+  industry       String?
+  notes          String?
+
+  createdById String
+  createdBy   User   @relation("AccountCreatedBy", fields: [createdById], references: [id])
+
+  contacts     Contact[]
+  requirements Requirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([normalizedName])
+  @@index([domain])
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name     String
+  role     String?
+  email    String?
+  phone    String?
+  linkedIn String?
+
+  createdById String
+  createdBy   User   @relation("ContactCreatedBy", fields: [createdById], references: [id])
+
+  requirements Requirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([email])
+}
+
+// ─── Notifications (in-app + escalation feed) ─────────────────────────────
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type  String
+  title String
+  body  String
+
+  requirementId String?
+  requirement   Requirement? @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model ReqCollaborator {
+  requirementId String
+  userId        String
+  addedAt       DateTime @default(now())
+
+  requirement Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([requirementId, userId])
+}
+
+// ─── Candidates ───────────────────────────────────────────────────────────────
+
+model Candidate {
+  id          String @id @default(cuid())
+  candidateId String @unique
+
+  name              String
+  email             String?
+  phone             String?
+  linkedIn          String?
+  currentLocation   String?
+  willingToRelocate Boolean @default(false)
+
+  skills         String[]
+  certifications String[] @default([])
+  experience     Float?
+  visaStatus     String?
+
+  currentJobTitle    String?
+  companiesWorkedFor String[]
+  noticePeriod       String?
+  currentCTC         String?
+  expectedCTC        String?
+  sourceDetail       String?
+
+  source  CandidateSource @default(external)
+  ownerId String
+  owner   User            @relation("CandidateOwner", fields: [ownerId], references: [id])
+
+  collaborators   CandidateCollaborator[]
+  resumes         Resume[]
+  pipelineEntries PipelineEntry[]
+  notes           Note[]          @relation("CandidateNotes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model CandidateCollaborator {
+  candidateId String
+  userId      String
+  addedAt     DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([candidateId, userId])
+}
+
+model Resume {
+  id          String   @id @default(cuid())
+  candidateId String
+  filePath    String
+  fileName    String
+  mimeType    String
+  uploadedAt  DateTime @default(now())
+  isActive    Boolean  @default(true)
+
+  uploadedById String?
+  uploadedBy   User?   @relation("ResumeUploadedBy", fields: [uploadedById], references: [id])
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  profile   ResumeProfile?
+
+  @@index([candidateId])
+}
+
+// ─── Resume Intelligence ──────────────────────────────────────────────────────
+
+model ResumeProfile {
+  id       String @id @default(cuid())
+  resumeId String @unique
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  candidateId String
+
+  extractedText String
+
+  name  String?
+  email String?
+  phone String?
+
+  skills               String[]
+  technologies         String[]
+  roles                String[]
+  industries           String[]
+  certifications       String[]
+  education            Json
+  projects             Json
+  totalExperienceYears Float?
+
+  currentJobTitle String?
+  companies       String[]
+  noticePeriod    String?
+  currentCTC      String?
+  expectedCTC     String?
+  location        String?
+
+  // Union of skills/technologies/roles/industries/certifications, lowercased,
+  // for fast keyword search and JD matching.
+  keywords String[]
+
+  parserVersion Int      @default(1)
+  parsedAt      DateTime @default(now())
+
+  @@index([candidateId])
+}
+
+model JDProfile {
+  id            String      @id @default(cuid())
+  requirementId String      @unique
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  extractedText String
+
+  jobTitle        String?
+  requiredSkills  String[]
+  preferredSkills String[]
+  keywords        String[]
+
+  certificationsRequired String[]
+  domainKeywords          String[]
+
+  minExperienceYears      Float?
+  maxExperienceYears      Float?
+  relevantExperienceYears Float?
+
+  location             String?
+  workModel             String?
+  employmentType        String?
+  educationRequirement  String?
+
+  parserVersion Int      @default(1)
+  parsedAt      DateTime @default(now())
+}
+
+// Standalone JD used by the JD Candidate Matching module — not tied to a
+// Requirement, so HR/Admin can test-match a JD against the whole resume
+// database without first creating a full job requirement record.
+model AdhocJD {
+  id          String @id @default(cuid())
+  title       String?
+  createdById String
+  createdBy   User   @relation("AdhocJDCreatedBy", fields: [createdById], references: [id])
+
+  jdFilePath    String?
+  jdText        String?
+  extractedText String?
+
+  jobTitle                String?
+  requiredSkills          String[]
+  preferredSkills         String[]
+  certificationsRequired  String[]
+  domainKeywords          String[]
+  keywords                String[]
+  minExperienceYears      Float?
+  maxExperienceYears      Float?
+  relevantExperienceYears Float?
+  location                String?
+  workModel               String?
+  employmentType          String?
+  educationRequirement    String?
+
+  parserVersion Int       @default(1)
+  parsedAt      DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([createdById])
+}
+
+// Admin-configurable settings for the JD matching module (currently just the
+// minimum match score used to filter the ranked results list).
+model MatchSettings {
+  id            String   @id @default("singleton")
+  minMatchScore Float    @default(70)
+  updatedAt     DateTime @updatedAt
+  updatedById   String?
+}
+
+// Growing dictionary of known skills/roles/industries/certifications, learned
+// from every resume and JD parsed. Frequency biases future keyword extraction
+// toward terms this CRM's corpus has actually seen, so matching quality
+// improves as more resumes flow through — the "learning" in Resume Intelligence.
+model SkillKeyword {
+  id       String          @id @default(cuid())
+  keyword  String          @unique
+  category KeywordCategory
+  source   String          @default("seed") // "seed" | "resume" | "jd"
+
+  frequency   Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  @@index([category])
+}
+
+// ─── Pipeline ─────────────────────────────────────────────────────────────────
+
+model PipelineStage {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  entries PipelineEntry[]
+  history PipelineStageHistory[]
+}
+
+model PipelineEntry {
+  id            String @id @default(cuid())
+  candidateId   String
+  requirementId String
+  stageId       String
+
+  submissionDate DateTime?
+  offerDate      DateTime?
+  placementDate  DateTime?
+
+  notes          Note[]                 @relation("PipelineNotes")
+  stageHistory   PipelineStageHistory[]
+  interviewDates InterviewDate[]
+  screenings     HRScreening[]
+
+  candidate   Candidate     @relation(fields: [candidateId], references: [id])
+  requirement Requirement   @relation(fields: [requirementId], references: [id])
+  stage       PipelineStage @relation(fields: [stageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requirementId])
+  @@index([candidateId])
+  @@index([stageId])
+}
+
+model PipelineStageHistory {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  stageId         String
+  changedById     String
+  changedAt       DateTime @default(now())
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+  stage         PipelineStage @relation(fields: [stageId], references: [id])
+  changedBy     User          @relation(fields: [changedById], references: [id])
+}
+
+model InterviewDate {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  scheduledAt     DateTime
+  label           String?
+  createdAt       DateTime @default(now())
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+}
+
+// ─── HR Screening (first-call questionnaire per pipeline entry) ───────────────
+
+model HRScreening {
+  id              String   @id @default(cuid())
+  pipelineEntryId String
+  conductedById   String
+  conductedAt     DateTime @default(now())
+
+  // responses: { sectionName: [ { question, answer } ] }
+  responses Json
+
+  notes String?
+
+  pipelineEntry PipelineEntry @relation(fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+  conductedBy   User          @relation(fields: [conductedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pipelineEntryId])
+}
+
+// ─── Notes (polymorphic comment thread) ──────────────────────────────────────
+
+model Note {
+  id       String @id @default(cuid())
+  body     String
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  requirementId String?
+  requirement   Requirement? @relation("RequirementNotes", fields: [requirementId], references: [id], onDelete: Cascade)
+
+  candidateId String?
+  candidate   Candidate? @relation("CandidateNotes", fields: [candidateId], references: [id], onDelete: Cascade)
+
+  pipelineEntryId String?
+  pipelineEntry   PipelineEntry? @relation("PipelineNotes", fields: [pipelineEntryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([requirementId])
+  @@index([candidateId])
+  @@index([pipelineEntryId])
+}
