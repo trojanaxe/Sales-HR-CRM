@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { serializeListing } from "@/lib/types";
+import { serializeListing, LISTING_WITH_AREA_INCLUDE } from "@/lib/types";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Pricing } from "@/components/Pricing";
@@ -15,7 +15,9 @@ const AVAILABILITY_ORDER: Record<string, number> = {
 
 export default async function HomePage() {
   const listings = await prisma.listing.findMany({
+    where: { area: { enabled: true, city: { enabled: true } } },
     orderBy: { createdAt: "desc" },
+    include: LISTING_WITH_AREA_INCLUDE,
   });
 
   const sorted = listings

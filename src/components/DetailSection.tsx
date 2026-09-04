@@ -7,7 +7,7 @@ export function DetailSection({
 }) {
   return (
     <section className="border-t border-brand-divider pt-6">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      <h2 className="font-heading text-lg font-semibold text-gray-900">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );

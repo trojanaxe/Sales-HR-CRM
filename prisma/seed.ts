@@ -11,11 +11,36 @@ const sampleImages = [
   "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=1200&q=80",
 ];
 
+const CITIES: { name: string; areas: string[] }[] = [
+  { name: "Bangalore", areas: ["Thanisandra", "HegdeNagar", "Kothanur", "Nagawara"] },
+];
+
+const PRICING_TIERS = [
+  {
+    price: 199,
+    label: "1 owner call",
+    description: "Perfect for checking out a single property you like.",
+    sortOrder: 0,
+  },
+  {
+    price: 299,
+    label: "3 owner calls",
+    description: "Compare a few options before you decide.",
+    sortOrder: 1,
+  },
+  {
+    price: 999,
+    label: "10 owner calls",
+    description: "Valid same day — ideal for a focused house-hunting sprint.",
+    sortOrder: 2,
+  },
+];
+
 const listings = [
   {
     propertyId: "BPC-Thanisandra-07",
     title: "2BHK in Thanisandra",
-    area: "Thanisandra",
+    areaName: "Thanisandra",
     rent: 25000,
     deposit: 100000,
     availability: "AVAILABLE" as const,
@@ -47,7 +72,7 @@ const listings = [
   {
     propertyId: "BPC-HegdeNagar-12",
     title: "3BHK in Hegde Nagar",
-    area: "HegdeNagar",
+    areaName: "HegdeNagar",
     rent: 42000,
     deposit: 200000,
     availability: "AVAILABLE" as const,
@@ -79,7 +104,7 @@ const listings = [
   {
     propertyId: "BPC-Kothanur-03",
     title: "1BHK in Kothanur",
-    area: "Kothanur",
+    areaName: "Kothanur",
     rent: 15500,
     deposit: 60000,
     availability: "UNDER_DISCUSSION" as const,
@@ -111,7 +136,7 @@ const listings = [
   {
     propertyId: "BPC-Nagawara-21",
     title: "2BHK in Nagawara",
-    area: "Nagawara",
+    areaName: "Nagawara",
     rent: 22000,
     deposit: 90000,
     availability: "AVAILABLE" as const,
@@ -143,20 +168,56 @@ const listings = [
 ];
 
 async function main() {
-  for (const listing of listings) {
+  const areaIdByName = new Map<string, string>();
+
+  for (const city of CITIES) {
+    const cityRow = await prisma.city.upsert({
+      where: { name: city.name },
+      update: {},
+      create: { name: city.name, enabled: true },
+    });
+
+    for (const areaName of city.areas) {
+      const areaRow = await prisma.area.upsert({
+        where: { cityId_name: { cityId: cityRow.id, name: areaName } },
+        update: {},
+        create: { name: areaName, cityId: cityRow.id, enabled: true },
+      });
+      areaIdByName.set(areaName, areaRow.id);
+    }
+  }
+
+  for (const tier of PRICING_TIERS) {
+    const existing = await prisma.pricingTier.findFirst({
+      where: { sortOrder: tier.sortOrder },
+    });
+    if (existing) {
+      await prisma.pricingTier.update({ where: { id: existing.id }, data: tier });
+    } else {
+      await prisma.pricingTier.create({ data: tier });
+    }
+  }
+
+  for (const { areaName, ...listing } of listings) {
+    const areaId = areaIdByName.get(areaName);
+    if (!areaId) throw new Error(`Unknown seed area: ${areaName}`);
+
     await prisma.listing.upsert({
       where: { propertyId: listing.propertyId },
       update: {
         ...listing,
+        areaId,
         images: JSON.stringify(listing.images),
       },
       create: {
         ...listing,
+        areaId,
         images: JSON.stringify(listing.images),
       },
     });
   }
-  console.log(`Seeded ${listings.length} listings.`);
+
+  console.log(`Seeded ${CITIES.length} city, ${areaIdByName.size} areas, ${PRICING_TIERS.length} pricing tiers, ${listings.length} listings.`);
 }
 
 main()

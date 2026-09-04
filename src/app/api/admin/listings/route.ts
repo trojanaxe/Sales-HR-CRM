@@ -9,14 +9,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  const existing = await prisma.listing.findUnique({
-    where: { propertyId: result.data.propertyId },
-  });
+  const [existing, area] = await Promise.all([
+    prisma.listing.findUnique({ where: { propertyId: result.data.propertyId } }),
+    prisma.area.findUnique({ where: { id: result.data.areaId } }),
+  ]);
+
   if (existing) {
     return NextResponse.json(
       { error: `Property ID "${result.data.propertyId}" is already in use.` },
       { status: 409 },
     );
+  }
+
+  if (!area) {
+    return NextResponse.json({ error: "Selected area does not exist." }, { status: 400 });
   }
 
   const listing = await prisma.listing.create({

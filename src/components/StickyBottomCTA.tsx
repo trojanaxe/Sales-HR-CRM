@@ -7,7 +7,7 @@ export function StickyBottomCTA({ propertyId }: { propertyId: string }) {
         href={buildWhatsAppLink(propertyId)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mx-auto flex max-w-5xl items-center justify-center rounded-xl bg-brand-primary px-6 py-3.5 text-center text-base font-semibold text-white shadow-sm transition hover:bg-brand-primary-dark active:scale-[0.99]"
+        className="mx-auto flex max-w-5xl items-center justify-center rounded-full bg-brand-primary px-6 py-3.5 text-center text-base font-semibold text-white shadow-sm transition hover:bg-brand-primary-dark active:scale-[0.99]"
       >
         Request Owner Call – ₹199
       </a>

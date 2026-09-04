@@ -60,10 +60,10 @@ export function ListingCard({ listing }: { listing: ListingWithImages }) {
 
         <p className="flex items-center gap-1 text-xs text-gray-500">
           <MapPinIcon className="h-3.5 w-3.5" />
-          {listing.area}
+          {listing.area.name}
         </p>
 
-        <span className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-brand-primary/10 px-4 py-2 text-sm font-semibold text-brand-primary-dark transition group-hover:bg-brand-primary group-hover:text-white">
+        <span className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary/10 px-4 py-2 text-sm font-semibold text-brand-primary-dark transition group-hover:bg-brand-primary group-hover:text-white">
           View Details
         </span>
       </div>

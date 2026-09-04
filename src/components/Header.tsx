@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { WhatsAppIcon } from "./icons";
-import { SERVICE_AREAS } from "@/lib/constants";
+import { getServiceAreaNames } from "@/lib/areas";
 import { buildGeneralWhatsAppLink } from "@/lib/whatsapp";
 
-export function Header() {
+export async function Header() {
+  const areaNames = await getServiceAreaNames();
+
   return (
     <header className="sticky top-0 z-40 border-b border-brand-divider bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
@@ -12,9 +14,11 @@ export function Header() {
           <Logo />
         </Link>
 
-        <p className="hidden truncate text-xs text-gray-500 sm:block sm:text-sm">
-          Serving {SERVICE_AREAS.join(", ")}
-        </p>
+        {areaNames.length > 0 && (
+          <p className="hidden truncate text-xs text-gray-500 sm:block sm:text-sm">
+            Serving {areaNames.join(", ")}
+          </p>
+        )}
 
         <a
           href={buildGeneralWhatsAppLink()}
@@ -26,9 +30,11 @@ export function Header() {
           <WhatsAppIcon className="h-5 w-5" />
         </a>
       </div>
-      <p className="block truncate bg-brand-bg px-4 py-1 text-center text-xs text-gray-500 sm:hidden">
-        Serving {SERVICE_AREAS.join(" · ")}
-      </p>
+      {areaNames.length > 0 && (
+        <p className="block truncate bg-brand-bg px-4 py-1 text-center text-xs text-gray-500 sm:hidden">
+          Serving {areaNames.join(" · ")}
+        </p>
+      )}
     </header>
   );
 }

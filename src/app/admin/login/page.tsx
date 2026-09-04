@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
         <div className="flex justify-center">
           <Logo />
         </div>
-        <h1 className="mt-4 text-center text-lg font-semibold text-gray-900">Admin Login</h1>
+        <h1 className="font-heading mt-4 text-center text-lg font-semibold text-gray-900">Admin Login</h1>
         <p className="mt-1 text-center text-sm text-gray-500">
           Manage listings, photos, and pricing.
         </p>

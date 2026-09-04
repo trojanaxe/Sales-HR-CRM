@@ -1,19 +1,27 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { serializeListing, AVAILABILITY_LABELS, AVAILABILITY_STYLES } from "@/lib/types";
+import {
+  serializeListing,
+  AVAILABILITY_LABELS,
+  AVAILABILITY_STYLES,
+  LISTING_WITH_AREA_INCLUDE,
+} from "@/lib/types";
 import { DeleteListingButton } from "@/components/admin/DeleteListingButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const listings = await prisma.listing.findMany({ orderBy: { createdAt: "desc" } });
+  const listings = await prisma.listing.findMany({
+    orderBy: { createdAt: "desc" },
+    include: LISTING_WITH_AREA_INCLUDE,
+  });
   const serialized = listings.map(serializeListing);
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Listings</h1>
+          <h1 className="font-heading text-xl font-bold text-gray-900">Listings</h1>
           <p className="text-sm text-gray-500">{serialized.length} total</p>
         </div>
         <Link
@@ -46,7 +54,7 @@ export default async function AdminDashboardPage() {
               <div>
                 <p className="font-semibold text-gray-900">{listing.title}</p>
                 <p className="text-xs text-gray-500">
-                  {listing.propertyId} · {listing.area} · ₹{listing.rent.toLocaleString("en-IN")}
+                  {listing.propertyId} · {listing.area.name} · ₹{listing.rent.toLocaleString("en-IN")}
                 </p>
                 <span
                   className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${AVAILABILITY_STYLES[listing.availability]}`}

@@ -1,7 +1,7 @@
 const REQUIRED_STRING_FIELDS = [
   "propertyId",
   "title",
-  "area",
+  "areaId",
   "propertyType",
   "bhk",
   "floor",
@@ -28,7 +28,7 @@ const LISTER_TYPE_VALUES = ["OWNER", "BROKER"];
 export type ListingInput = {
   propertyId: string;
   title: string;
-  area: string;
+  areaId: string;
   rent: number;
   deposit: number;
   availability: "AVAILABLE" | "UNDER_DISCUSSION" | "RENTED";
@@ -109,7 +109,7 @@ export function validateListingInput(body: unknown): { data: ListingInput } | { 
     data: {
       propertyId: (b.propertyId as string).trim(),
       title: (b.title as string).trim(),
-      area: (b.area as string).trim(),
+      areaId: (b.areaId as string).trim(),
       rent: Math.round(rent),
       deposit: Math.round(deposit),
       availability: availability as ListingInput["availability"],

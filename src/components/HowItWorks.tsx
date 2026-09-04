@@ -20,7 +20,7 @@ export function HowItWorks() {
   return (
     <section className="bg-brand-bg">
       <div className="mx-auto max-w-5xl px-4 py-12">
-        <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
+        <h2 className="font-heading text-center text-2xl font-bold text-gray-900 sm:text-3xl">
           How It Works
         </h2>
 
@@ -33,7 +33,7 @@ export function HowItWorks() {
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-sm font-bold text-white">
                 {step.number}
               </span>
-              <h3 className="mt-3 font-semibold text-gray-900">{step.title}</h3>
+              <h3 className="font-heading mt-3 font-semibold text-gray-900">{step.title}</h3>
               <p className="mt-1 text-sm text-gray-600">{step.description}</p>
             </div>
           ))}

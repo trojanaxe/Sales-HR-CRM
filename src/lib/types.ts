@@ -1,23 +1,47 @@
-import type { Listing as PrismaListing } from "@prisma/client";
+import type { Listing as PrismaListing, Area, City } from "@prisma/client";
 
-export type ListingWithImages = Omit<PrismaListing, "images" | "createdAt" | "updatedAt"> & {
+export const LISTING_WITH_AREA_INCLUDE = {
+  area: { include: { city: true } },
+} as const;
+
+type ListingRecord = PrismaListing & { area: Area & { city: City } };
+
+export type ListingWithImages = Omit<
+  ListingRecord,
+  "images" | "createdAt" | "updatedAt" | "area"
+> & {
   images: string[];
   createdAt: string;
   updatedAt: string;
+  area: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    city: { id: string; name: string; enabled: boolean };
+  };
 };
 
-export function serializeListing(listing: PrismaListing): ListingWithImages {
+export function serializeListing(listing: ListingRecord): ListingWithImages {
   let images: string[] = [];
   try {
     images = JSON.parse(listing.images);
   } catch {
     images = [];
   }
+
+  const { area, createdAt, updatedAt, ...rest } = listing;
+
   return {
-    ...listing,
+    ...rest,
     images,
-    createdAt: listing.createdAt.toISOString(),
-    updatedAt: listing.updatedAt.toISOString(),
+    createdAt: createdAt.toISOString(),
+    updatedAt: updatedAt.toISOString(),
+    area: {
+      id: area.id,
+      name: area.name,
+      enabled: area.enabled,
+      city: { id: area.city.id, name: area.city.name, enabled: area.city.enabled },
+    },
   };
 }
 

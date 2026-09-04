@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { serializeListing, AVAILABILITY_LABELS, AVAILABILITY_STYLES } from "@/lib/types";
+import {
+  serializeListing,
+  AVAILABILITY_LABELS,
+  AVAILABILITY_STYLES,
+  LISTING_WITH_AREA_INCLUDE,
+} from "@/lib/types";
 import { Gallery } from "@/components/Gallery";
 import { StickyBottomCTA } from "@/components/StickyBottomCTA";
 import { DetailSection, DetailGrid } from "@/components/DetailSection";
@@ -11,7 +16,10 @@ import { CheckBadgeIcon, MapPinIcon } from "@/components/icons";
 export const dynamic = "force-dynamic";
 
 async function getListing(propertyId: string) {
-  const listing = await prisma.listing.findUnique({ where: { propertyId } });
+  const listing = await prisma.listing.findUnique({
+    where: { propertyId, area: { enabled: true, city: { enabled: true } } },
+    include: LISTING_WITH_AREA_INCLUDE,
+  });
   if (!listing) return null;
   return serializeListing(listing);
 }
@@ -25,7 +33,7 @@ export async function generateMetadata({
   const listing = await getListing(propertyId);
   if (!listing) return { title: "Listing not found — Homespy" };
   return {
-    title: `${listing.title} — ${listing.area} | Homespy`,
+    title: `${listing.title} — ${listing.area.name} | Homespy`,
     description: listing.about,
   };
 }
@@ -64,10 +72,10 @@ export default async function ListingPage({
               </span>
             </div>
 
-            <h1 className="mt-2 text-2xl font-bold text-gray-900">{listing.title}</h1>
+            <h1 className="font-heading mt-2 text-2xl font-bold text-gray-900">{listing.title}</h1>
             <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
               <MapPinIcon className="h-4 w-4" />
-              {listing.area}, Bangalore
+              {listing.area.name}, {listing.area.city.name}
             </p>
             <p className="mt-1 text-xs text-gray-400">Property ID: {listing.propertyId}</p>
           </div>
@@ -136,7 +144,7 @@ export default async function ListingPage({
           </DetailSection>
 
           <DetailSection title="Location">
-            <MapEmbed mapEmbedUrl={listing.mapEmbedUrl} area={listing.area} />
+            <MapEmbed mapEmbedUrl={listing.mapEmbedUrl} area={listing.area.name} />
           </DetailSection>
         </div>
       </div>

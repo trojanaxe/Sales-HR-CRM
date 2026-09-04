@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ListingWithImages } from "@/lib/types";
+import type { CityWithAreas } from "@/lib/areas";
 
 type FormState = {
   propertyId: string;
   title: string;
-  area: string;
+  areaId: string;
   rent: string;
   deposit: string;
   availability: "AVAILABLE" | "UNDER_DISCUSSION" | "RENTED";
@@ -39,7 +40,7 @@ type FormState = {
 const EMPTY_STATE: FormState = {
   propertyId: "",
   title: "",
-  area: "",
+  areaId: "",
   rent: "",
   deposit: "",
   availability: "AVAILABLE",
@@ -72,7 +73,7 @@ function fromListing(listing: ListingWithImages): FormState {
   return {
     propertyId: listing.propertyId,
     title: listing.title,
-    area: listing.area,
+    areaId: listing.areaId,
     rent: String(listing.rent),
     deposit: String(listing.deposit),
     availability: listing.availability as FormState["availability"],
@@ -134,13 +135,19 @@ function TextField({
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-xl border border-brand-divider bg-white p-4">
-      <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+      <h2 className="font-heading text-sm font-semibold text-gray-900">{title}</h2>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
     </section>
   );
 }
 
-export function ListingForm({ listing }: { listing?: ListingWithImages }) {
+export function ListingForm({
+  listing,
+  cities,
+}: {
+  listing?: ListingWithImages;
+  cities: CityWithAreas[];
+}) {
   const router = useRouter();
   const isEdit = Boolean(listing);
   const [form, setForm] = useState<FormState>(listing ? fromListing(listing) : EMPTY_STATE);
@@ -228,7 +235,36 @@ export function ListingForm({ listing }: { listing?: ListingWithImages }) {
       <FormSection title="Identity">
         <TextField label="Property ID" name="propertyId" value={form.propertyId} onChange={update} placeholder="BPC-Thanisandra-07" />
         <TextField label="Title" name="title" value={form.title} onChange={update} placeholder="2BHK in Thanisandra" />
-        <TextField label="Area" name="area" value={form.area} onChange={update} placeholder="Thanisandra" />
+        <label className="block">
+          <span className="text-xs font-medium text-gray-600">Area</span>
+          <select
+            required
+            value={form.areaId}
+            onChange={(e) => update("areaId", e.target.value)}
+            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+          >
+            <option value="" disabled>
+              Select an area…
+            </option>
+            {cities.map((city) => (
+              <optgroup
+                key={city.id}
+                label={city.enabled ? city.name : `${city.name} (city disabled)`}
+              >
+                {city.areas.map((area) => (
+                  <option key={area.id} value={area.id}>
+                    {area.enabled ? area.name : `${area.name} (disabled)`}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          {cities.every((c) => c.areas.length === 0) && (
+            <p className="mt-1 text-xs text-red-600">
+              No areas exist yet — add one under Admin → Areas &amp; Cities first.
+            </p>
+          )}
+        </label>
         <label className="block">
           <span className="text-xs font-medium text-gray-600">Availability</span>
           <select

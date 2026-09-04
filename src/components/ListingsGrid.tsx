@@ -5,7 +5,7 @@ export function ListingsGrid({ listings }: { listings: ListingWithImages[] }) {
   return (
     <section id="listings" className="scroll-mt-16 bg-brand-bg">
       <div className="mx-auto max-w-5xl px-4 py-12">
-        <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Available Flats</h2>
+        <h2 className="font-heading text-2xl font-bold text-gray-900 sm:text-3xl">Available Flats</h2>
         <p className="mt-1 text-sm text-gray-500">
           {listings.length} verified {listings.length === 1 ? "listing" : "listings"}
         </p>

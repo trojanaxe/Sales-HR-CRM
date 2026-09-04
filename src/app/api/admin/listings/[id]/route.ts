@@ -17,14 +17,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Listing not found." }, { status: 404 });
   }
 
-  const duplicate = await prisma.listing.findUnique({
-    where: { propertyId: result.data.propertyId },
-  });
+  const [duplicate, area] = await Promise.all([
+    prisma.listing.findUnique({ where: { propertyId: result.data.propertyId } }),
+    prisma.area.findUnique({ where: { id: result.data.areaId } }),
+  ]);
+
   if (duplicate && duplicate.id !== id) {
     return NextResponse.json(
       { error: `Property ID "${result.data.propertyId}" is already in use.` },
       { status: 409 },
     );
+  }
+
+  if (!area) {
+    return NextResponse.json({ error: "Selected area does not exist." }, { status: 400 });
   }
 
   await prisma.listing.update({
