@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Availability {
+  AVAILABLE
+  UNDER_DISCUSSION
+  RENTED
+}
+
+enum ListerType {
+  OWNER
+  BROKER
+}
+
+model City {
+  id      String  @id @default(cuid())
+  name    String  @unique
+  enabled Boolean @default(true)
+  areas   Area[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Area {
+  id      String  @id @default(cuid())
+  name    String
+  enabled Boolean @default(true)
+
+  cityId String
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  listings Listing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cityId, name])
+}
+
+model PricingTier {
+  id          String  @id @default(cuid())
+  price       Int
+  label       String
+  description String
+  sortOrder   Int     @default(0)
+  enabled     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Listing {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Identity
+  propertyId String @unique
+  title      String
+  areaId     String
+  area       Area   @relation(fields: [areaId], references: [id], onDelete: Restrict)
+
+  // Price summary
+  rent        Int
+  deposit     Int
+  availability Availability @default(AVAILABLE)
+
+  // Overview
+  propertyType String
+  bhk          String
+  floor        String
+  totalFloors  String
+  facing       String
+  balcony      String
+  furnishing   String
+  parking      String
+  ageOfBuilding String
+
+  // Utilities & charges
+  maintenance     String
+  waterSupply     String
+  powerBackup     String
+  lift            String
+  gatedCommunity  String
+
+  // Tenant info
+  preferredTenant String
+  previousTenant  String
+  petFriendly     String
+
+  // About
+  about String
+
+  // Listing meta
+  listerType ListerType @default(OWNER)
+  verified   Boolean    @default(true)
+
+  // Media
+  images String @default("[]") // JSON-encoded array of image URLs
+
+  // Map (admin-editable)
+  mapEmbedUrl String?
+  latitude    Float?
+  longitude   Float?
+
+  @@index([availability])
+  @@index([areaId])
+}

@@ -1,0 +1,23 @@
+import { getAllCitiesWithAreas } from "@/lib/areas";
+import { AreasManager } from "@/components/admin/AreasManager";
+
+export const metadata = { title: "Areas & Cities — Homespy Admin" };
+export const dynamic = "force-dynamic";
+
+export default async function AdminAreasPage() {
+  const cities = await getAllCitiesWithAreas();
+
+  return (
+    <div>
+      <h1 className="font-whisper text-heading-sm text-ink">Areas &amp; Cities</h1>
+      <p className="mt-2 text-body-sm text-ink-muted">
+        Disabled cities/areas are hidden from the public site and listing dropdowns immediately —
+        no redeploy needed. Deleting an area or city that still has listings is blocked; disable
+        it instead.
+      </p>
+      <div className="mt-6">
+        <AreasManager cities={cities} />
+      </div>
+    </div>
+  );
+}

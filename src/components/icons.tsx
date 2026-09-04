@@ -1,0 +1,58 @@
+export function WhatsAppIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.653 4.527 1.787 6.393L4 29l7.79-1.744A11.93 11.93 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3Zm0 21.75a9.7 9.7 0 0 1-4.947-1.353l-.355-.21-4.62 1.035 1.01-4.507-.232-.37A9.7 9.7 0 0 1 5.25 15c0-5.93 4.824-10.75 10.754-10.75S26.75 9.07 26.75 15 21.933 24.75 16.004 24.75Z" />
+      <path d="M21.6 17.66c-.302-.152-1.788-.883-2.065-.984-.277-.101-.479-.152-.68.152-.202.303-.78.984-.957 1.187-.176.202-.353.227-.655.076-.302-.152-1.276-.47-2.431-1.501-.899-.802-1.506-1.792-1.682-2.095-.176-.303-.019-.466.133-.617.136-.135.302-.353.454-.53.15-.176.2-.303.302-.505.101-.202.05-.379-.025-.53-.076-.152-.68-1.64-.932-2.245-.246-.591-.495-.511-.68-.52l-.579-.01c-.202 0-.53.076-.807.379-.277.303-1.058 1.034-1.058 2.523s1.083 2.928 1.234 3.13c.152.202 2.132 3.256 5.166 4.567.722.312 1.285.498 1.724.638.724.23 1.383.198 1.904.12.581-.087 1.788-.731 2.04-1.437.253-.706.253-1.311.177-1.437-.076-.126-.278-.202-.58-.353Z" />
+    </svg>
+  );
+}
+
+export function CheckBadgeIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M10 1.5c.6 0 1.16.26 1.55.71l.86.99 1.3-.2a2.08 2.08 0 0 1 2.34 1.7l.22 1.3.99.85a2.08 2.08 0 0 1 .45 2.63l-.62 1.16.62 1.16a2.08 2.08 0 0 1-.45 2.63l-.99.85-.22 1.3a2.08 2.08 0 0 1-2.34 1.7l-1.3-.2-.86.99a2.08 2.08 0 0 1-3.1 0l-.86-.99-1.3.2a2.08 2.08 0 0 1-2.34-1.7l-.22-1.3-.99-.85a2.08 2.08 0 0 1-.45-2.63l.62-1.16-.62-1.16a2.08 2.08 0 0 1 .45-2.63l.99-.85.22-1.3a2.08 2.08 0 0 1 2.34-1.7l1.3.2.86-.99A2.07 2.07 0 0 1 10 1.5Zm3.35 6.4a.75.75 0 0 0-1.1-1.02l-3.3 3.55-1.3-1.4a.75.75 0 1 0-1.1 1.02l1.85 2a.75.75 0 0 0 1.1 0l3.85-4.15Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+export function MapPinIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M9.69 18.93a.75.75 0 0 0 .62 0c.26-.12 6.69-3.1 6.69-9.18a7 7 0 1 0-14 0c0 6.08 6.43 9.06 6.69 9.18ZM10 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Homespy's mascot glyph — a key, standing in for a vowel in display
+ * headlines (an original device, not a copy of any reference mark).
+ * The round bow doubles as the letter "o" it replaces.
+ */
+export function KeyGlyph({ className = "h-[0.72em] w-[0.72em]" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="2.6" />
+      <path
+        d="M13.6 13.6L21 21M21 21V16.5M21 21H16.5"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
