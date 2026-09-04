@@ -22,7 +22,7 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center bg-brand-bg text-gray-400 sm:aspect-[16/9] sm:rounded-2xl">
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-brand-bg text-body-sm text-ink-muted sm:aspect-[16/9] sm:rounded-3xl">
         No photos yet
       </div>
     );
@@ -33,7 +33,7 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="no-scrollbar snap-x-mandatory flex aspect-[4/3] w-full snap-mandatory overflow-x-auto scroll-smooth bg-brand-bg sm:aspect-[16/9] sm:rounded-2xl"
+        className="no-scrollbar snap-x-mandatory flex aspect-[4/3] w-full snap-mandatory overflow-x-auto scroll-smooth bg-brand-bg sm:aspect-[16/9] sm:rounded-3xl"
       >
         {images.map((src, i) => (
           <div key={src + i} className="relative h-full w-full flex-none snap-center">
@@ -63,7 +63,7 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
               />
             ))}
           </div>
-          <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2 py-0.5 text-xs font-medium text-white">
+          <span className="text-caption font-whisper absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-white">
             {activeIndex + 1}/{images.length}
           </span>
         </>

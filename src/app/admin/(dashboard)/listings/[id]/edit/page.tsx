@@ -21,8 +21,8 @@ export default async function EditListingPage({
 
   return (
     <div>
-      <h1 className="font-heading text-xl font-bold text-gray-900">Edit Listing</h1>
-      <p className="mt-1 text-sm text-gray-500">{listing.propertyId}</p>
+      <h1 className="font-whisper text-heading-sm text-ink">Edit Listing</h1>
+      <p className="mt-2 text-body-sm text-ink-muted">{listing.propertyId}</p>
       <div className="mt-6">
         <ListingForm listing={serializeListing(listing)} cities={cities} />
       </div>

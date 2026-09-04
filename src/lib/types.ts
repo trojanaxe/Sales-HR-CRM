@@ -52,7 +52,7 @@ export const AVAILABILITY_LABELS: Record<string, string> = {
 };
 
 export const AVAILABILITY_STYLES: Record<string, string> = {
-  AVAILABLE: "bg-brand-primary/10 text-brand-primary-dark",
-  UNDER_DISCUSSION: "bg-amber-100 text-amber-700",
-  RENTED: "bg-gray-200 text-gray-600",
+  AVAILABLE: "bg-success text-white",
+  UNDER_DISCUSSION: "bg-amber-100 text-amber-800",
+  RENTED: "bg-ink-muted/20 text-ink-muted",
 };

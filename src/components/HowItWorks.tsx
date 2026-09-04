@@ -18,28 +18,26 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-brand-bg">
-      <div className="mx-auto max-w-5xl px-4 py-12">
-        <h2 className="font-heading text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-          How It Works
-        </h2>
+    <section className="bg-ink-dark">
+      <div className="mx-auto max-w-page px-4 py-16 sm:px-6">
+        <h2 className="font-whisper text-center text-heading text-white">How It Works</h2>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-6">
+        <div className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-6">
           {STEPS.map((step) => (
             <div
               key={step.number}
-              className="rounded-2xl border border-brand-divider bg-white p-5 shadow-sm"
+              className="rounded-3xl border border-brand-divider bg-surface p-6 sm:p-8"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-sm font-bold text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-body-sm font-whisper text-white">
                 {step.number}
               </span>
-              <h3 className="font-heading mt-3 font-semibold text-gray-900">{step.title}</h3>
-              <p className="mt-1 text-sm text-gray-600">{step.description}</p>
+              <h3 className="font-whisper mt-4 text-subheading text-ink">{step.title}</h3>
+              <p className="mt-2 text-body-sm text-ink-muted">{step.description}</p>
             </div>
           ))}
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-8 text-center text-body-sm font-whisper text-white/70">
           You pay only when you choose to talk to the owner.
         </p>
       </div>

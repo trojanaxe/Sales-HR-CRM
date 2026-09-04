@@ -30,3 +30,29 @@ export function MapPinIcon({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * Homespy's mascot glyph — a key, standing in for a vowel in display
+ * headlines (an original device, not a copy of any reference mark).
+ * The round bow doubles as the letter "o" it replaces.
+ */
+export function KeyGlyph({ className = "h-[0.72em] w-[0.72em]" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="2.6" />
+      <path
+        d="M13.6 13.6L21 21M21 21V16.5M21 21H16.5"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

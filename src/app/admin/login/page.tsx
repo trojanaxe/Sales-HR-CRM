@@ -9,12 +9,12 @@ export const metadata = {
 export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-brand-divider bg-white p-6 shadow-sm">
+      <div className="w-full max-w-sm rounded-3xl border border-brand-divider bg-surface p-8">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <h1 className="font-heading mt-4 text-center text-lg font-semibold text-gray-900">Admin Login</h1>
-        <p className="mt-1 text-center text-sm text-gray-500">
+        <h1 className="font-whisper mt-5 text-center text-subheading text-ink">Admin Login</h1>
+        <p className="mt-1 text-center text-body-sm text-ink-muted">
           Manage listings, photos, and pricing.
         </p>
 

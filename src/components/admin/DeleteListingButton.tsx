@@ -28,7 +28,7 @@ export function DeleteListingButton({ id, propertyId }: { id: string; propertyId
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+      className="text-caption font-whisper rounded-full border border-red-200 px-3.5 py-1.5 text-red-600 transition hover:bg-red-50 disabled:opacity-60"
     >
       {loading ? "Deleting…" : "Delete"}
     </button>

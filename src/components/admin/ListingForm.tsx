@@ -120,13 +120,13 @@ function TextField({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <span className="text-caption font-whisper text-ink-muted">{label}</span>
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(name, e.target.value)}
-        className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+        className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
       />
     </label>
   );
@@ -134,9 +134,9 @@ function TextField({
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-brand-divider bg-white p-4">
-      <h2 className="font-heading text-sm font-semibold text-gray-900">{title}</h2>
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
+    <section className="rounded-3xl border border-brand-divider bg-surface p-6">
+      <h2 className="font-whisper text-body text-ink">{title}</h2>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
     </section>
   );
 }
@@ -236,12 +236,12 @@ export function ListingForm({
         <TextField label="Property ID" name="propertyId" value={form.propertyId} onChange={update} placeholder="BPC-Thanisandra-07" />
         <TextField label="Title" name="title" value={form.title} onChange={update} placeholder="2BHK in Thanisandra" />
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Area</span>
+          <span className="text-caption font-whisper text-ink-muted">Area</span>
           <select
             required
             value={form.areaId}
             onChange={(e) => update("areaId", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             <option value="" disabled>
               Select an area…
@@ -260,17 +260,17 @@ export function ListingForm({
             ))}
           </select>
           {cities.every((c) => c.areas.length === 0) && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1.5 text-caption text-red-600">
               No areas exist yet — add one under Admin → Areas &amp; Cities first.
             </p>
           )}
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Availability</span>
+          <span className="text-caption font-whisper text-ink-muted">Availability</span>
           <select
             value={form.availability}
             onChange={(e) => update("availability", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             <option value="AVAILABLE">Available</option>
             <option value="UNDER_DISCUSSION">Under Discussion</option>
@@ -278,11 +278,11 @@ export function ListingForm({
           </select>
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Listed by</span>
+          <span className="text-caption font-whisper text-ink-muted">Listed by</span>
           <select
             value={form.listerType}
             onChange={(e) => update("listerType", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             <option value="OWNER">Owner</option>
             <option value="BROKER">Broker</option>
@@ -295,7 +295,7 @@ export function ListingForm({
             onChange={(e) => setForm((prev) => ({ ...prev, verified: e.target.checked }))}
             className="h-4 w-4 rounded border-brand-divider text-brand-primary focus:ring-brand-primary"
           />
-          <span className="text-sm text-gray-700">Verified listing</span>
+          <span className="text-body-sm text-ink">Verified listing</span>
         </label>
       </FormSection>
 
@@ -332,19 +332,19 @@ export function ListingForm({
 
       <FormSection title="About the Property">
         <div className="sm:col-span-2">
-          <span className="text-xs font-medium text-gray-600">About (2–4 human lines, no marketing fluff)</span>
+          <span className="text-caption font-whisper text-ink-muted">About (2–4 human lines, no marketing fluff)</span>
           <textarea
             value={form.about}
             onChange={(e) => update("about", e.target.value)}
             rows={4}
-            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
       </FormSection>
 
       <FormSection title="Map">
         <div className="sm:col-span-2">
-          <span className="text-xs font-medium text-gray-600">
+          <span className="text-caption font-whisper text-ink-muted">
             Map embed URL (Google Maps → Share → Embed a map → copy the src URL)
           </span>
           <input
@@ -352,7 +352,7 @@ export function ListingForm({
             value={form.mapEmbedUrl}
             onChange={(e) => update("mapEmbedUrl", e.target.value)}
             placeholder="https://www.google.com/maps?q=...&output=embed"
-            className="mt-1 w-full rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1.5 w-full rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
         <TextField label="Latitude (optional)" name="latitude" value={form.latitude} onChange={update} type="number" />
@@ -367,20 +367,20 @@ export function ListingForm({
             multiple
             onChange={handleFileChange}
             disabled={uploading}
-            className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-primary-dark hover:file:bg-brand-primary/20"
+            className="text-body-sm font-whisper block w-full text-ink-muted file:mr-3 file:rounded-full file:border-0 file:bg-brand-primary/10 file:px-4 file:py-2 file:text-body-sm file:font-whisper file:text-brand-primary-dark hover:file:bg-brand-primary/20"
           />
-          {uploading && <p className="mt-2 text-xs text-gray-500">Uploading…</p>}
+          {uploading && <p className="mt-2 text-caption text-ink-muted">Uploading…</p>}
 
           {images.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {images.map((url) => (
-                <div key={url} className="group relative aspect-square overflow-hidden rounded-lg bg-brand-bg">
+                <div key={url} className="group relative aspect-square overflow-hidden rounded-2xl bg-brand-bg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="" className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(url)}
-                    className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+                    className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-caption font-whisper text-white opacity-0 transition group-hover:opacity-100"
                   >
                     ✕
                   </button>
@@ -392,22 +392,22 @@ export function ListingForm({
       </FormSection>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="rounded-2xl bg-red-50 px-4 py-3 text-body-sm text-red-600">{error}</p>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-divider bg-white/95 p-3 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl gap-3 px-1">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-divider bg-surface/95 p-3 backdrop-blur">
+        <div className="mx-auto flex max-w-page gap-3 px-1">
           <button
             type="button"
             onClick={() => router.push("/admin")}
-            className="flex-1 rounded-lg border border-brand-divider px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-brand-bg sm:flex-none"
+            className="font-whisper flex-1 rounded-full border border-brand-divider px-4 py-3 text-body-sm text-ink transition hover:bg-brand-bg sm:flex-none"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving || uploading}
-            className="flex-1 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-primary-dark disabled:opacity-60 sm:flex-none"
+            className="font-whisper flex-1 rounded-full bg-brand-primary px-4 py-3 text-body-sm text-white shadow-cta transition hover:bg-brand-primary-dark disabled:opacity-60 sm:flex-none"
           >
             {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Listing"}
           </button>

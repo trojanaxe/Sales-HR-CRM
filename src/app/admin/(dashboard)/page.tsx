@@ -21,12 +21,12 @@ export default async function AdminDashboardPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-xl font-bold text-gray-900">Listings</h1>
-          <p className="text-sm text-gray-500">{serialized.length} total</p>
+          <h1 className="font-whisper text-heading-sm text-ink">Listings</h1>
+          <p className="text-body-sm text-ink-muted">{serialized.length} total</p>
         </div>
         <Link
           href="/admin/listings/new"
-          className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary-dark"
+          className="font-whisper rounded-full bg-brand-primary px-5 py-2.5 text-body-sm text-white shadow-cta transition hover:bg-brand-primary-dark"
         >
           + Add Listing
         </Link>
@@ -34,7 +34,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-6 space-y-3">
         {serialized.length === 0 && (
-          <p className="rounded-xl border border-dashed border-brand-divider bg-white p-8 text-center text-gray-500">
+          <p className="rounded-3xl border border-dashed border-brand-divider bg-surface p-8 text-center text-body-sm text-ink-muted">
             No listings yet. Add your first one.
           </p>
         )}
@@ -42,22 +42,22 @@ export default async function AdminDashboardPage() {
         {serialized.map((listing) => (
           <div
             key={listing.id}
-            className="flex flex-col gap-3 rounded-xl border border-brand-divider bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-3xl border border-brand-divider bg-surface p-5 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={listing.images[0] || "/window.svg"}
                 alt=""
-                className="h-14 w-14 shrink-0 rounded-lg bg-brand-bg object-cover"
+                className="h-14 w-14 shrink-0 rounded-2xl bg-brand-bg object-cover"
               />
               <div>
-                <p className="font-semibold text-gray-900">{listing.title}</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-whisper text-body text-ink">{listing.title}</p>
+                <p className="text-caption text-ink-muted">
                   {listing.propertyId} · {listing.area.name} · ₹{listing.rent.toLocaleString("en-IN")}
                 </p>
                 <span
-                  className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${AVAILABILITY_STYLES[listing.availability]}`}
+                  className={`text-caption font-whisper mt-1 inline-block rounded-full px-3 py-1 ${AVAILABILITY_STYLES[listing.availability]}`}
                 >
                   {AVAILABILITY_LABELS[listing.availability]}
                 </span>
@@ -67,7 +67,7 @@ export default async function AdminDashboardPage() {
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <Link
                 href={`/admin/listings/${listing.id}/edit`}
-                className="rounded-lg border border-brand-divider px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-brand-bg"
+                className="text-caption font-whisper rounded-full border border-brand-divider px-4 py-1.5 text-ink transition hover:bg-brand-bg"
               >
                 Edit
               </Link>

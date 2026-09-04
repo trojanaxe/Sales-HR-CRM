@@ -8,14 +8,14 @@ export async function Header() {
   const areaNames = await getServiceAreaNames();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-brand-divider bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+    <header className="sticky top-0 z-40 border-b border-brand-divider bg-surface/95 backdrop-blur">
+      <div className="mx-auto flex max-w-page items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link href="/" className="shrink-0">
           <Logo />
         </Link>
 
         {areaNames.length > 0 && (
-          <p className="hidden truncate text-xs text-gray-500 sm:block sm:text-sm">
+          <p className="hidden truncate rounded-full bg-brand-bg px-4 py-1.5 text-caption font-whisper text-ink-muted sm:block">
             Serving {areaNames.join(", ")}
           </p>
         )}
@@ -31,7 +31,7 @@ export async function Header() {
         </a>
       </div>
       {areaNames.length > 0 && (
-        <p className="block truncate bg-brand-bg px-4 py-1 text-center text-xs text-gray-500 sm:hidden">
+        <p className="block truncate bg-brand-bg px-4 py-1.5 text-center text-caption font-whisper text-ink-muted sm:hidden">
           Serving {areaNames.join(" · ")}
         </p>
       )}

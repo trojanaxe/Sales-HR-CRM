@@ -28,10 +28,10 @@ function ToggleButton({
       type="button"
       onClick={onToggle}
       disabled={disabled}
-      className={`rounded-full px-2.5 py-1 text-xs font-semibold transition disabled:opacity-60 ${
+      className={`text-caption font-whisper rounded-full px-3 py-1 transition disabled:opacity-60 ${
         enabled
           ? "bg-brand-primary/10 text-brand-primary-dark hover:bg-brand-primary/20"
-          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+          : "bg-ink-muted/15 text-ink-muted hover:bg-ink-muted/25"
       }`}
     >
       {enabled ? "Enabled" : "Disabled"}
@@ -130,39 +130,39 @@ export function AreasManager({ cities }: { cities: CityWithAreas[] }) {
 
   return (
     <div className="space-y-4">
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="rounded-2xl bg-red-50 px-4 py-3 text-body-sm text-red-600">{error}</p>}
 
-      <div className="flex gap-2 rounded-xl border border-brand-divider bg-white p-4">
+      <div className="flex gap-2 rounded-3xl border border-brand-divider bg-surface p-5">
         <input
           value={newCityName}
           onChange={(e) => setNewCityName(e.target.value)}
           placeholder="New city name (e.g. Mumbai)"
-          className="flex-1 rounded-lg border border-brand-divider px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+          className="flex-1 rounded-2xl border border-brand-divider px-4 py-2.5 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         />
         <button
           type="button"
           onClick={addCity}
           disabled={busy === "add-city" || !newCityName.trim()}
-          className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary-dark disabled:opacity-60"
+          className="font-whisper rounded-full bg-brand-primary px-5 py-2.5 text-body-sm text-white shadow-cta transition hover:bg-brand-primary-dark disabled:opacity-60"
         >
           Add City
         </button>
       </div>
 
       {cities.length === 0 && (
-        <p className="rounded-xl border border-dashed border-brand-divider bg-white p-8 text-center text-gray-500">
+        <p className="rounded-3xl border border-dashed border-brand-divider bg-surface p-8 text-center text-body-sm text-ink-muted">
           No cities yet. Add one above to get started.
         </p>
       )}
 
       {cities.map((city) => (
-        <div key={city.id} className="rounded-xl border border-brand-divider bg-white p-4">
+        <div key={city.id} className="rounded-3xl border border-brand-divider bg-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => renameCity(city.id, city.name)}
-                className="font-semibold text-gray-900 hover:underline"
+                className="font-whisper text-body text-ink hover:underline"
               >
                 {city.name}
               </button>
@@ -176,26 +176,26 @@ export function AreasManager({ cities }: { cities: CityWithAreas[] }) {
               type="button"
               onClick={() => deleteCity(city.id, city.name)}
               disabled={busy === `city-delete-${city.id}`}
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+              className="text-caption font-whisper rounded-full border border-red-200 px-3.5 py-1.5 text-red-600 transition hover:bg-red-50 disabled:opacity-60"
             >
               Delete City
             </button>
           </div>
 
-          <div className="mt-3 space-y-2 border-t border-brand-divider pt-3">
+          <div className="mt-4 space-y-2 border-t border-brand-divider pt-4">
             {city.areas.length === 0 && (
-              <p className="text-sm text-gray-400">No areas in this city yet.</p>
+              <p className="text-body-sm text-ink-muted/70">No areas in this city yet.</p>
             )}
             {city.areas.map((area) => (
               <div
                 key={area.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-bg px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-full bg-brand-bg px-4 py-2"
               >
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => renameArea(area.id, area.name)}
-                    className="text-sm font-medium text-gray-800 hover:underline"
+                    className="text-body-sm font-whisper text-ink hover:underline"
                   >
                     {area.name}
                   </button>
@@ -209,7 +209,7 @@ export function AreasManager({ cities }: { cities: CityWithAreas[] }) {
                   type="button"
                   onClick={() => deleteArea(area.id, area.name)}
                   disabled={busy === `area-delete-${area.id}`}
-                  className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                  className="text-caption font-whisper rounded-full border border-red-200 px-3 py-1 text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                 >
                   Delete
                 </button>
@@ -223,13 +223,13 @@ export function AreasManager({ cities }: { cities: CityWithAreas[] }) {
                   setNewAreaName((prev) => ({ ...prev, [city.id]: e.target.value }))
                 }
                 placeholder="New area name"
-                className="flex-1 rounded-lg border border-brand-divider px-3 py-1.5 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                className="flex-1 rounded-full border border-brand-divider px-4 py-2 text-body-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
               />
               <button
                 type="button"
                 onClick={() => addArea(city.id)}
                 disabled={busy === `add-area-${city.id}` || !(newAreaName[city.id] || "").trim()}
-                className="rounded-lg bg-brand-primary/10 px-3 py-1.5 text-sm font-semibold text-brand-primary-dark transition hover:bg-brand-primary/20 disabled:opacity-60"
+                className="font-whisper rounded-full bg-brand-primary/10 px-4 py-2 text-body-sm text-brand-primary-dark transition hover:bg-brand-primary/20 disabled:opacity-60"
               >
                 Add Area
               </button>

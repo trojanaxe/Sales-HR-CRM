@@ -1,15 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdfcfe;
+  --foreground: #1c1c1c;
 
-  /* Homespy brand palette (mandatory) */
+  /* Homespy brand palette (mandatory: primary green stays #07a454) */
   --color-brand-primary: #07a454;
   --color-brand-primary-dark: #068a46;
-  --color-brand-white: #ffffff;
-  --color-brand-bg: #f5f5f5;
-  --color-brand-divider: #eaeaea;
+  --color-brand-white: #fdfcfe;
+  --color-brand-bg: #f4f2f4;
+  --color-brand-divider: #e9e8ea;
+
+  /* Semantic system tokens */
+  --color-ink: #1c1c1c;
+  --color-ink-muted: #86848d;
+  --color-ink-dark: #0d1f16;
+  --color-surface: #fdfcfe;
+  --color-success: #2ec08b;
 }
 
 @theme inline {
@@ -20,8 +27,60 @@
   --color-brand-white: var(--color-brand-white);
   --color-brand-bg: var(--color-brand-bg);
   --color-brand-divider: var(--color-brand-divider);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-ink-dark: var(--color-ink-dark);
+  --color-surface: var(--color-surface);
+  --color-success: var(--color-success);
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  /* Font weights (Inter loaded as a variable font — 350 is a genuine
+     intermediate weight, not a synthesized approximation) */
+  --font-weight-whisper: 350;
+  --font-weight-regular: 400;
+
+  /* Type scale — size + line-height + letter-spacing bundled per role */
+  --text-caption: 13px;
+  --text-caption--line-height: 1.35;
+
+  --text-body-sm: 15px;
+  --text-body-sm--line-height: 1.4;
+  --text-body-sm--letter-spacing: -0.375px;
+
+  --text-body: 16px;
+  --text-body--line-height: 1.4;
+  --text-body--letter-spacing: -0.4px;
+
+  --text-subheading: 20px;
+  --text-subheading--line-height: 1.35;
+  --text-subheading--letter-spacing: -0.5px;
+
+  --text-heading-sm: 24px;
+  --text-heading-sm--line-height: 1.25;
+  --text-heading-sm--letter-spacing: -0.6px;
+
+  --text-heading: 30px;
+  --text-heading--line-height: 1.21;
+  --text-heading--letter-spacing: -0.75px;
+
+  --text-heading-lg: 64px;
+  --text-heading-lg--line-height: 1.1;
+  --text-heading-lg--letter-spacing: -1.6px;
+
+  --text-display: 96px;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -2.4px;
+
+  /* Radius: pill (rounded-full) and card (rounded-3xl, 24px) already
+     exist natively in Tailwind. This adds the "links" role at 32px. */
+  --radius-4xl: 32px;
+
+  /* Page container: 1200px per spec (was 1024px / max-w-5xl) */
+  --container-page: 1200px;
+
+  /* Single permitted elevation: the primary-CTA glow */
+  --shadow-cta: 0 0 4px rgba(7, 164, 84, 0.35);
 }
 
 body {

@@ -10,17 +10,20 @@ export async function Footer() {
 
   return (
     <footer className="border-t border-brand-divider bg-brand-bg">
-      <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mx-auto max-w-page px-4 py-12 sm:px-6">
         <Logo />
-        <p className="mt-3 max-w-md text-sm text-gray-600">
+        <p className="mt-4 max-w-md text-body-sm font-whisper text-ink-muted">
           {coverageLabel
             ? `Verified rental listings across ${coverageLabel}. Premium photos, genuine listings, privacy-first calls.`
             : "Verified rental listings. Premium photos, genuine listings, privacy-first calls."}
         </p>
-        <p className="mt-4 text-xs text-gray-400">
+        <p className="mt-6 text-caption text-ink-muted">
           © {new Date().getFullYear()} Homespy. All rights reserved.
         </p>
-        <Link href="/admin" className="mt-2 inline-block text-xs text-gray-300 hover:text-gray-400">
+        <Link
+          href="/admin"
+          className="mt-2 inline-block text-caption text-ink-muted/60 hover:text-ink-muted"
+        >
           Admin
         </Link>
       </div>
